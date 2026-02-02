@@ -1,27 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --bg-deep: #1a0f0a;
+  --bg-warm: #2c1810;
+  --accent-gold: #c6a664;
+  --text-main: #f5ebe0;
+  --bubble-bg: rgba(255, 255, 255, 0.08);
+  --bubble-border: rgba(255, 255, 255, 0.15);
+  --glass-bg: rgba(44, 24, 16, 0.85);
+  --glass-border: rgba(198, 166, 100, 0.3);
+  --font-zen: 'Zen Maru Gothic', sans-serif;
 }
 
 * {
@@ -30,13 +18,71 @@ body {
   margin: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html,
+body {
+  max-width: 100vw;
+  overflow: hidden;
+  height: 100dvh;
+  background: radial-gradient(circle at center, var(--bg-warm) 0%, var(--bg-deep) 100%);
+  color: var(--text-main);
+  font-family: var(--font-zen);
+  -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+/* 浮遊アニメーション */
+@keyframes floatX {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-40px); }
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(10px, -15px) rotate(2deg); }
+  50% { transform: translate(-5px, -30px) rotate(-1deg); }
+  75% { transform: translate(-15px, -15px) rotate(1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.floating-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bubble {
+  position: absolute;
+  padding: 12px 20px;
+  background: var(--bubble-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--bubble-border);
+  border-radius: 20px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.bubble:active {
+  transform: scale(0.95);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
