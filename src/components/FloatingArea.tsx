@@ -5,6 +5,7 @@ import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "fireba
 import { db } from "@/lib/firebase";
 import { motion, Variants } from "framer-motion";
 import { getCurrentUserId } from "@/lib/auth";
+import { TRIVIA_POSTS } from "@/data/triviaPosts";
 
 interface Post {
     id: string;
@@ -27,18 +28,7 @@ const STAMPS: Record<string, { color: string; icon: string }> = {
     FLORAL: { color: "#B39DDB", icon: "🌸" },
 };
 
-const TRIVIA_POSTS: Post[] = [
-    { id: "trivia1", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：発見の伝説", location: "エチオピア", flavorText: "コーヒーは9世紀頃、ヤギ飼いのカルディが「ヤギが赤い実を食べて興奮している」のを見て発見されたと言われています🐐", flavorStamp: "BITTER", likes: 100, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia2", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：カフェイン量", location: "焙煎所", flavorText: "実は「深煎り」よりも「浅煎り」の方が、豆の体積あたりのカフェイン含有量は少し多いんですよ💡", flavorStamp: "JUICY", likes: 82, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia3", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：種です", location: "農園", flavorText: "コーヒー豆は「豆」と呼ばれていますが、植物学的には「コーヒーノキの果実（チェリー）の種」なんです🍒", flavorStamp: "SWEET", likes: 95, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia4", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：語源", location: "アラビア", flavorText: "「コーヒー（Coffee）」の語源は、アラビア語の「カフワ（Qahwa/ワインの意味）」から来ています🍷", flavorStamp: "FLORAL", likes: 76, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia5", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：消費量", location: "フィンランド", flavorText: "世界で一番コーヒーを飲む国はフィンランド！一人当たり1日4〜5杯も飲むそうですよ🇫🇮", flavorStamp: "JUICY", likes: 120, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia6", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：アメリカーノ", location: "イタリア", flavorText: "「アメリカーノ」は、第二次大戦中に米兵がエスプレッソをお湯で薄めて飲んだのが始まりだとか🇺🇸", flavorStamp: "BITTER", likes: 64, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia7", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：世界三大", location: "タンザニア", flavorText: "世界三大コーヒーといえば、「ブルーマウンテン（ジャマイカ）」「コナ（ハワイ）」そして「キリマンジャロ（タンザニア）」です⛰️", flavorStamp: "BITTER", likes: 88, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia8", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：デカフェ", location: "実験室", flavorText: "デカフェ（カフェインレス）でも、実はごく微量のカフェインは残っていることが多いんです☕️", flavorStamp: "SWEET", likes: 55, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia9", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：カプチーノ", location: "修道院", flavorText: "「カプチーノ」の名前は、カプチン修道会の修道士が着ていた茶色の服の色に似ていたから…という説があります🙏", flavorStamp: "SWEET", likes: 90, createdAt: { toDate: () => new Date() } as any },
-    { id: "trivia10", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：エスプレッソ", location: "イタリア", flavorText: "「エスプレッソ」はイタリア語で「急行」の意味。「注文を受けてから急速に淹れる」ことから来ています🚆", flavorStamp: "BITTER", likes: 110, createdAt: { toDate: () => new Date() } as any },
-];
+
 
 export default function FloatingArea() {
     const [posts, setPosts] = useState<Post[]>([]);
