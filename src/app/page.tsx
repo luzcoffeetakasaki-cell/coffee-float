@@ -1,8 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import FloatingArea from "@/components/FloatingArea";
 import PostForm from "@/components/PostForm";
 import Disclaimer from "@/components/Disclaimer";
+import MyPage from "@/components/MyPage";
 
 export default function Home() {
+  const [showMyPage, setShowMyPage] = useState(false);
+
   return (
     <main style={{ height: "100dvh", position: "relative", overflow: "hidden" }}>
       {/* Header Area */}
@@ -29,11 +35,32 @@ export default function Home() {
         }}>
           今、この瞬間の美味しいを。
         </p>
+        <button
+          onClick={() => setShowMyPage(true)}
+          style={{
+            marginTop: "1rem",
+            padding: "0.5rem 1rem",
+            borderRadius: "1rem",
+            border: "1px solid var(--accent-gold)",
+            backgroundColor: "rgba(198, 166, 100, 0.1)",
+            color: "var(--accent-gold)",
+            fontSize: "0.8rem",
+            cursor: "pointer",
+            pointerEvents: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem"
+          }}
+        >
+          📊 マイページ
+        </button>
       </div>
 
       <FloatingArea />
       <PostForm />
       <Disclaimer />
+
+      {showMyPage && <MyPage onClose={() => setShowMyPage(false)} />}
 
       {/* Background Decor */}
       <div style={{

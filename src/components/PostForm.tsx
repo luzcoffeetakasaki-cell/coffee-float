@@ -13,6 +13,7 @@ export default function PostForm() {
     const [location, setLocation] = useState("");
     const [flavorText, setFlavorText] = useState("");
     const [flavorStamp, setFlavorStamp] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
 
@@ -23,12 +24,20 @@ export default function PostForm() {
         { label: "FLORAL", color: "#B39DDB", icon: "🌸" },
     ];
 
-    // ニックネームの読み込み (localStorage)
+    // ニックネームの読み込み (localStorage) & LIFF userId の取得
     useEffect(() => {
         const savedNickname = localStorage.getItem("coffee_float_nickname");
         if (savedNickname) {
             setNickname(savedNickname);
         }
+
+        const fetchProfile = async () => {
+            const profile = await getLiffProfile();
+            if (profile?.userId) {
+                setUserId(profile.userId);
+            }
+        };
+        fetchProfile();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +74,7 @@ export default function PostForm() {
             }
 
             await addDoc(collection(db, "posts"), {
+                userId: userId || "anonymous",
                 nickname: nickname || "名無しのコーヒー好き",
                 coffeeName,
                 location,
