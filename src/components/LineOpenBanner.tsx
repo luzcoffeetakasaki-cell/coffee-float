@@ -9,6 +9,8 @@ export default function LineOpenBanner() {
     const [showBanner, setShowBanner] = useState(false);
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
 
+    const [targetUrl, setTargetUrl] = useState("");
+
     useEffect(() => {
         // LIFF初期化待ちなどを考慮し、少し遅延させるか、単純に条件チェック
         // liff.isInClient() は初期化前でも false なので、初期化完了を待つのが理想だが
@@ -20,6 +22,10 @@ export default function LineOpenBanner() {
             const isLine = navigator.userAgent.includes("Line");
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+            // パラメータを引き継ぐ
+            const searchParams = window.location.search;
+            setTargetUrl(`https://liff.line.me/${liffId}${searchParams}`);
+
             // モバイルかつ、LINEアプリ外かつ、PWAでない場合に提案
             if (isMobile && !isLine && !isPWA) {
                 setShowBanner(true);
@@ -27,13 +33,13 @@ export default function LineOpenBanner() {
         };
 
         checkEnvironment();
-    }, [isPWA]);
+    }, [isPWA, liffId]);
 
-    if (!showBanner || !liffId) return null;
+    if (!showBanner || !liffId || !targetUrl) return null;
 
     return (
         <a
-            href={`https://liff.line.me/${liffId}`}
+            href={targetUrl}
             style={{
                 position: "fixed",
                 bottom: "1.5rem",
