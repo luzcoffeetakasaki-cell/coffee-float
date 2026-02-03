@@ -152,37 +152,44 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
     // 奥行きに基づいたスタイル計算
     // depthは現在state管理だが、Framer Motionで滑らかに補間する
     // バリエーション定義
+    const transitionSettings: any = { // 型エラー回避のため any (Framer Motionの型定義が厳密なため)
+        type: "spring",
+        stiffness: 40,  // バネの強さ（低いほど柔らかい）
+        damping: 15,    // 振動の抑え（低いほど揺れる）
+        mass: 1.2       // 重さ（重いほどゆったり）
+    };
+
     const variants: Variants = {
         far: {
-            scale: 0.8,
-            filter: "blur(2px)",
-            opacity: 0.8,
+            scale: 0.85,
+            filter: "blur(1.5px)",
+            opacity: 0.7,
             zIndex: 1,
-            borderRadius: "50%", // 遠くでは丸い泡
-            width: "90px", // 固定サイズ
+            borderRadius: "50%",
+            width: "90px",
             height: "90px",
             padding: "0.5rem",
             justifyContent: "center",
             alignItems: "center",
             textAlign: "center",
-            display: "flex", // 中央揃え用
+            display: "flex",
             flexDirection: "column",
-            transition: { duration: 8 + Math.random() * 5, ease: "easeInOut" }
+            transition: transitionSettings
         },
         near: {
-            scale: 1.1,
+            scale: 1.05, // 大きくしすぎないことで動きを上品に
             filter: "blur(0px)",
             opacity: 1,
             zIndex: 100,
-            borderRadius: "24px", // 近くでは読みやすい四角
-            width: "auto", // コンテンツに合わせて広がる
+            borderRadius: "24px",
+            width: "auto",
             height: "auto",
-            padding: "1rem",
+            padding: "1.2rem",
             justifyContent: "flex-start",
             alignItems: "flex-start",
             textAlign: "left",
             display: "block",
-            transition: { duration: 8 + Math.random() * 5, ease: "easeInOut" }
+            transition: transitionSettings
         }
     };
 
