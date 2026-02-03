@@ -4,7 +4,11 @@ export const initLiff = async (liffId: string) => {
     try {
         await liff.init({ liffId });
         console.log("LIFF init success");
-        // 自動ログインは廃止 (PWA化のために初回表示を許可)
+
+        // LINEアプリ内ブラウザ（LIFF）で開いている場合は、強制的にログイン状態にする（UX向上）
+        if (liff.isInClient() && !liff.isLoggedIn()) {
+            liff.login();
+        }
     } catch (error) {
         console.error("LIFF init failed", error);
     }
