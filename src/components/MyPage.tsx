@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { login } from "@/lib/liff";
 import { writeBatch, getDocs } from "firebase/firestore";
+import { usePWA } from "@/hooks/usePWA";
 
 interface Post {
     id: string;
@@ -37,6 +38,7 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
+    const isPWA = usePWA();
 
     useEffect(() => {
         const init = async () => {
@@ -202,15 +204,16 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
                             </p>
                             <button
                                 onClick={() => login()}
+                                disabled={isPWA}
                                 style={{
                                     width: "100%",
                                     padding: "0.8rem",
                                     borderRadius: "0.8rem",
                                     border: "none",
-                                    backgroundColor: "white",
-                                    color: "#06C755",
+                                    backgroundColor: isPWA ? "rgba(255,255,255,0.5)" : "white",
+                                    color: isPWA ? "#666" : "#06C755",
                                     fontWeight: "bold",
-                                    cursor: "pointer",
+                                    cursor: isPWA ? "not-allowed" : "pointer",
                                     fontSize: "0.9rem",
                                     display: "flex",
                                     alignItems: "center",
@@ -218,8 +221,15 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
                                     gap: "0.5rem"
                                 }}
                             >
-                                <span style={{ fontSize: "1.2rem" }}>💬</span> LINEで連携して保存する
+                                <span style={{ fontSize: "1.2rem" }}>💬</span> {isPWA ? "LINE連携はブラウザ版のみ対応" : "LINEで連携して保存する"}
                             </button>
+                            {isPWA && (
+                                <p style={{ fontSize: "0.75rem", marginTop: "0.8rem", opacity: 0.8, background: "rgba(0,0,0,0.1)", padding: "0.5rem", borderRadius: "0.5rem" }}>
+                                    ⚠️ アプリ版（ホーム画面追加）ではLINEログインの仕様上、連携が正常に動作しない場合があります。
+                                    <br />
+                                    確実にデータを引き継ぐには、SafariやChromeなどのブラウザで開き直してください。
+                                </p>
+                            )}
                         </section>
                     )}
 
