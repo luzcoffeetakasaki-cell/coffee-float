@@ -9,8 +9,18 @@ service cloud.firestore {
       // 作成は誰でも可能
       allow create: if true;
       
-      // 更新は「乾杯（likes）」の加算のみ許可
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']);
+      // 更新ルール
+      allow update: if 
+        // 1. 「乾杯（likes）」の加算のみ（誰でもOK）
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) 
+        || 
+        // 2. データ移行（ゲスト -> LINEユーザー）
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userId']) &&
+          request.auth != null &&
+          request.resource.data.userId == request.auth.uid &&
+          resource.data.userId.matches('^guest_.*')
+        );
     }
 
     match /notifications/{notificationId} {
