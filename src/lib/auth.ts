@@ -33,3 +33,21 @@ export const getCurrentUserId = async (): Promise<string> => {
 
     return "unknown_user";
 };
+
+/**
+ * 与えられたユーザーIDがゲストID（デバイスID）かどうかを判定します。
+ */
+export const isGuestUserId = (userId: string | null): boolean => {
+    return !!userId && userId.startsWith("guest_");
+};
+
+/**
+ * ローカルストレージに保存されているデバイスID（ゲストID）を取得します。
+ */
+export const getStoredDeviceId = (): string | null => {
+    if (typeof window !== "undefined") {
+        return localStorage.getItem(STORAGE_KEY);
+    }
+    return null;
+};
+

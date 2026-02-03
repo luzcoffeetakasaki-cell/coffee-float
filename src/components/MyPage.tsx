@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
+import { login } from "@/lib/liff";
+import { writeBatch, getDocs } from "firebase/firestore";
 
 interface Post {
     id: string;
@@ -30,10 +32,42 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
         const init = async () => {
             const id = await getCurrentUserId();
             setUserId(id);
+
+            // データ移行（ゲストID -> LINE ID）のチェック
+            const storedGuestId = getStoredDeviceId();
+            if (id && !isGuestUserId(id) && storedGuestId && isGuestUserId(storedGuestId)) {
+                // ログイン済みだが、ローカルにゲストIDが残っている場合 = 移行が必要
+                migrateGuestData(storedGuestId, id);
+            }
+
             setLoading(false);
         };
         init();
     }, []);
+
+    const migrateGuestData = async (guestId: string, lineId: string) => {
+        try {
+            const q = query(
+                collection(db, "posts"),
+                where("userId", "==", guestId)
+            );
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return;
+
+            const batch = writeBatch(db);
+            snapshot.docs.forEach((docSnap) => {
+                batch.update(docSnap.ref, { userId: lineId });
+            });
+            await batch.commit();
+            console.log(`Migrated ${snapshot.size} posts from ${guestId} to ${lineId}`);
+
+            // 移行完了後、混乱を避けるためゲストIDは削除（または無効化）
+            // ここではlocalStorageから消す
+            localStorage.removeItem("coffee_float_device_userId");
+        } catch (error) {
+            console.error("Migration failed", error);
+        }
+    };
 
     useEffect(() => {
         if (!userId) return;
@@ -94,6 +128,43 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
                 <div style={{ textAlign: "center", padding: "3rem" }}>分析中...☕️</div>
             ) : (
                 <>
+                    {/* ゲストへの案内 */}
+                    {userId && isGuestUserId(userId) && (
+                        <section style={{
+                            background: "linear-gradient(135deg, #06C755 0%, #05a345 100%)",
+                            padding: "1.5rem",
+                            borderRadius: "1.5rem",
+                            marginBottom: "2rem",
+                            color: "white",
+                            boxShadow: "0 4px 15px rgba(6, 199, 85, 0.3)"
+                        }}>
+                            <h3 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>LINEと連携しませんか？ 🔗</h3>
+                            <p style={{ fontSize: "0.85rem", opacity: 0.9, marginBottom: "1.2rem", lineHeight: "1.5" }}>
+                                現在はゲストとして利用中です。LINEと連携すると、機種変更しても大切なコーヒーログを安全に引き継げます。
+                            </p>
+                            <button
+                                onClick={() => login()}
+                                style={{
+                                    width: "100%",
+                                    padding: "0.8rem",
+                                    borderRadius: "0.8rem",
+                                    border: "none",
+                                    backgroundColor: "white",
+                                    color: "#06C755",
+                                    fontWeight: "bold",
+                                    cursor: "pointer",
+                                    fontSize: "0.9rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.5rem"
+                                }}
+                            >
+                                <span style={{ fontSize: "1.2rem" }}>💬</span> LINEで連携して保存する
+                            </button>
+                        </section>
+                    )}
+
                     {/* コーヒーカルテ（分析） */}
                     <section style={{
                         background: "rgba(255,255,255,0.05)",

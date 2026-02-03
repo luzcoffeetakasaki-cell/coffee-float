@@ -5,8 +5,10 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentUserId } from "@/lib/auth";
 import { checkNgWords } from "@/lib/filter";
+import { useSearchParams } from "next/navigation";
 
 export default function PostForm() {
+    const searchParams = useSearchParams();
     const [isOpen, setIsOpen] = useState(false);
     const [nickname, setNickname] = useState("");
     const [coffeeName, setCoffeeName] = useState("");
@@ -24,7 +26,7 @@ export default function PostForm() {
         { label: "FLORAL", color: "#B39DDB", icon: "🌸" },
     ];
 
-    // ニックネームの読み込み (localStorage) & LIFF userId の取得
+    // URLパラメータの取得 & ニックネームの読み込み
     useEffect(() => {
         const savedNickname = localStorage.getItem("coffee_float_nickname");
         if (savedNickname) {
@@ -36,7 +38,14 @@ export default function PostForm() {
             setUserId(id);
         };
         fetchProfile();
-    }, [isOpen]);
+
+        // ?cafe=店舗名 があれば自動入力
+        const cafeParam = searchParams.get("cafe");
+        if (cafeParam) {
+            setLocation(cafeParam);
+            setIsOpen(true); // パラメーターがあれば自動でフォームを開く
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
