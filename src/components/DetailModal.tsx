@@ -1,5 +1,8 @@
 "use client";
 
+import { doc, updateDoc, increment } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 interface Post {
     id: string;
     nickname: string;
@@ -45,6 +48,21 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
         } else {
             navigator.clipboard.writeText(shareUrl);
             alert("リンクをコピーしました！📋");
+        }
+    };
+
+    const handleCheers = async () => {
+        if (!post) return;
+        try {
+            const postRef = doc(db, "posts", post.id);
+            await updateDoc(postRef, {
+                likes: increment(1)
+            });
+            // 楽観的UI更新はonSnapshotに任せるか、必要ならローカルstate導入
+            // 今回はユーザーフィードバックとして簡単なalertやanimationを入れるのもありだが
+            // まずは機能実装。
+        } catch (error) {
+            console.error("Cheers failed", error);
         }
     };
 
@@ -136,6 +154,31 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
+                    <button
+                        onClick={handleCheers}
+                        style={{
+                            padding: "0.8rem 2rem",
+                            borderRadius: "2rem",
+                            border: "none",
+                            backgroundColor: "var(--accent-gold)",
+                            color: "#000",
+                            cursor: "pointer",
+                            fontSize: "1.2rem",
+                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            boxShadow: "0 4px 15px rgba(198, 166, 100, 0.4)",
+                            transition: "transform 0.1s"
+                        }}
+                        onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
+                        onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+                    >
+                        🥂 乾杯！ ({post.likes || 0})
+                    </button>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1.5rem" }}>
                     <button
                         onClick={handleShare}
                         style={{
