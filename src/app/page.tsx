@@ -5,11 +5,12 @@ import FloatingArea from "@/components/FloatingArea";
 import PostForm from "@/components/PostForm";
 import Disclaimer from "@/components/Disclaimer";
 import CoffeeLog from "@/components/CoffeeLog";
+import BeanList from "@/components/BeanList";
 import LineOpenBanner from "@/components/LineOpenBanner";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"home" | "log">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "log" | "beans">("home");
 
   return (
     <main style={{ height: "100dvh", position: "relative", overflow: "hidden" }}>
@@ -43,8 +44,10 @@ export default function Home() {
       <div style={{ width: "100%", height: "100%" }}>
         {activeTab === "home" ? (
           <FloatingArea />
-        ) : (
+        ) : activeTab === "log" ? (
           <CoffeeLog />
+        ) : (
+          <BeanList />
         )}
       </div>
 
@@ -119,6 +122,25 @@ export default function Home() {
           }}
         >
           <span>📊</span> ログ
+        </button>
+        <button
+          onClick={() => setActiveTab("beans")}
+          style={{
+            background: activeTab === "beans" ? "var(--accent-gold)" : "transparent",
+            color: activeTab === "beans" ? "#1e0f0a" : "var(--accent-gold)",
+            border: "none",
+            borderRadius: "1.5rem",
+            padding: "0.8rem 1.5rem",
+            fontSize: "0.9rem",
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem"
+          }}
+        >
+          <span>🫘</span> 豆
         </button>
       </div>
     </main>

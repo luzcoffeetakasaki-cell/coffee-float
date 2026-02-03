@@ -29,6 +29,12 @@ const STAMPS: Record<string, { color: string; icon: string }> = {
 };
 
 
+const getRandomTrivia = () => {
+    const shuffled = [...TRIVIA_POSTS].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
+};
+
+
 
 export default function FloatingArea() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -43,7 +49,7 @@ export default function FloatingArea() {
         // Firebase設定が不完全な場合はデモ用データを表示
         if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
             console.warn("Firebase API Key is missing. Running in DEMO MODE.");
-            setPosts(TRIVIA_POSTS);
+            setPosts(getRandomTrivia());
             return;
         }
 
@@ -61,13 +67,13 @@ export default function FloatingArea() {
                     ...doc.data(),
                 })) as Post[];
                 // データが空の場合は豆知識（Bot）を表示
-                setPosts(newPosts.length > 0 ? newPosts : TRIVIA_POSTS);
+                setPosts(newPosts.length > 0 ? newPosts : getRandomTrivia());
             });
 
             return () => unsubscribe();
         } catch (error) {
             console.error("Firebase connection error. Falling back to DEMO MODE.", error);
-            setPosts(TRIVIA_POSTS);
+            setPosts(getRandomTrivia());
         }
     }, []);
 
@@ -113,7 +119,8 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
         });
     }, []);
 
-    const stamp = post.flavorStamp ? STAMPS[post.flavorStamp] : null;
+    const isTrivia = post.userId === "master";
+    const stamp = !isTrivia && post.flavorStamp ? STAMPS[post.flavorStamp] : null;
 
     if (!initialPos) return null;
 
@@ -124,17 +131,19 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 left: initialPos.left,
                 top: initialPos.top,
                 position: 'absolute',
-                // カプセル型デザイン
-                border: isMine ? "1px solid #C6A664" : "1px solid rgba(255, 255, 255, 0.2)",
+                // カプセル型デザイン (Triviaは別デザイン)
+                border: isMine ? "1px solid #C6A664" : isTrivia ? "1px dashed rgba(255, 255, 255, 0.4)" : "1px solid rgba(255, 255, 255, 0.2)",
                 boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0, 0, 0, 0.1)",
                 background: isMine
                     ? "linear-gradient(135deg, rgba(60, 40, 30, 0.95) 0%, rgba(30, 15, 10, 0.95) 100%)"
-                    : "rgba(255, 255, 255, 0.15)",
+                    : isTrivia
+                        ? "rgba(40, 40, 50, 0.85)"
+                        : "rgba(255, 255, 255, 0.15)",
                 backdropFilter: "blur(5px)",
                 WebkitBackdropFilter: "blur(5px)",
                 zIndex: isMine ? 100 : 10, // 自分の投稿を少し優先
 
-                borderRadius: "50px", // 完全なカプセル形状
+                borderRadius: isTrivia ? "12px" : "50px", // Triviaは少し角ばらせる
                 padding: "0.5rem 1rem",
                 width: "auto",
                 maxWidth: "240px",
@@ -166,7 +175,7 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
             <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <div style={{
                     fontSize: "0.9rem",
-                    color: isMine ? "#C6A664" : "#ffffff",
+                    color: isMine || isTrivia ? "#C6A664" : "#ffffff",
                     lineHeight: "1.2",
                     whiteSpace: "nowrap",
                     fontWeight: "bold",
@@ -178,6 +187,12 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 }}>
                     {post.coffeeName}
                 </div>
+
+                {isTrivia && (
+                    <div style={{ fontSize: "0.7rem", color: "rgba(255, 255, 255, 0.9)", maxWidth: "180px", lineHeight: "1.2", marginTop: "0.2rem" }}>
+                        {post.flavorText.length > 20 ? post.flavorText.substring(0, 20) + "..." : post.flavorText}
+                    </div>
+                )}
 
                 {/* Footer: Nickname & Location */}
                 <div style={{

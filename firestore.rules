@@ -21,5 +21,9 @@ service cloud.firestore {
       allow read, update, delete: if true; 
       allow create: if true;
     }
+
+    match /beans/{beanId} {
+      allow read, write: if true;
+    }
   }
 }
