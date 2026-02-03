@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { doc, updateDoc, increment, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getCurrentUserId } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Post {
     id: string;
+    userId: string; // 通知用に追加
     nickname: string;
     coffeeName: string;
     location: string;
@@ -80,6 +82,27 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 icon: icons[Math.floor(Math.random() * icons.length)]
             }));
             setParticles(prev => [...prev, ...newParticles]);
+
+            // 通知作成
+            const fromUserId = await getCurrentUserId();
+            // 自分の投稿への乾杯は通知しない & 相手がいる場合のみ
+            if (fromUserId && post.userId && fromUserId !== post.userId) {
+                const notificationId = `cheer_${fromUserId}_${post.id}`;
+                const notificationRef = doc(db, "notifications", notificationId);
+                const savedNickname = localStorage.getItem("coffee_float_nickname") || "名無しの誰か";
+
+                await setDoc(notificationRef, {
+                    toUserId: post.userId,
+                    fromUserId: fromUserId,
+                    postId: post.id,
+                    coffeeName: post.coffeeName,
+                    type: "cheer",
+                    senderNickname: savedNickname,
+                    read: false,
+                    createdAt: serverTimestamp(),
+                }, { merge: true }); // ユニークIDなので、既存なら上書き（実質何もしない）
+                console.log("Notification created successfully!");
+            }
 
         } catch (error) {
             console.error("Cheers failed", error);

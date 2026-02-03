@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 interface Post {
     id: string;
+    userId: string;
     nickname: string;
     coffeeName: string;
     location: string;
@@ -28,6 +29,7 @@ const STAMPS: Record<string, { color: string; icon: string }> = {
 const MOCK_POSTS: Post[] = [
     {
         id: "mock1",
+        userId: "mock_user_1",
         nickname: "エチオピア好き",
         coffeeName: "エチオピア イルガチェフェ",
         location: "お気に入りのカフェ",
@@ -38,16 +40,18 @@ const MOCK_POSTS: Post[] = [
     },
     {
         id: "mock2",
+        userId: "mock_user_2",
         nickname: "深煎りマニア",
         coffeeName: "マンデリン G1",
         location: "自宅キッチン",
-        flavorText: "ガツンとくる苦味とこく。バターたっぷりトーストに最高に合う☕️",
+        flavorText: "ガツンとくる苦味とこく. バターたっぷりトーストに最高に合う☕️",
         flavorStamp: "BITTER",
         likes: 3,
         createdAt: { toDate: () => new Date(Date.now() - 1000 * 60 * 30) } as any,
     },
     {
         id: "mock3",
+        userId: "mock_user_3",
         nickname: "旅するカフェ店員",
         coffeeName: "ゲイシャ ナチュラル",
         location: "代々木公園",

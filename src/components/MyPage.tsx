@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, Timestamp, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { login } from "@/lib/liff";
@@ -15,6 +15,15 @@ interface Post {
     createdAt: Timestamp;
 }
 
+interface Notification {
+    id: string;
+    postId: string;
+    coffeeName: string;
+    senderNickname: string;
+    read: boolean;
+    createdAt: Timestamp;
+}
+
 const STAMPS: Record<string, { color: string; icon: string; message: string }> = {
     SWEET: { color: "#FF8DA1", icon: "🍬", message: "あなたは甘いひとときを大切にするタイプ。自分へのご褒美を忘れない優しい心の持ち主ですね。" },
     JUICY: { color: "#FFB347", icon: "🍊", message: "あなたは冒険心あふれるフルーティー派。新しい発見や驚きを求めて、毎日を鮮やかに彩る人です。" },
@@ -24,6 +33,7 @@ const STAMPS: Record<string, { color: string; icon: string; message: string }> =
 
 export default function MyPage({ onClose }: { onClose: () => void }) {
     const [posts, setPosts] = useState<Post[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
@@ -99,6 +109,54 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
         return () => unsubscribe();
     }, [userId]);
 
+    // 通知の取得
+    useEffect(() => {
+        if (!userId) return;
+
+        const q = query(
+            collection(db, "notifications"),
+            where("toUserId", "==", userId)
+            // 一旦シンプルにしてインデックスエラーを回避
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const newNotifications = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Notification[];
+            setNotifications(newNotifications);
+        }, (error) => {
+            console.error("Notification listener failed:", error);
+            setNotifications([]);
+        });
+
+        return () => unsubscribe();
+    }, [userId]);
+
+    const markAsRead = async (notificationId: string) => {
+        try {
+            const batch = writeBatch(db);
+            const ref = doc(db, "notifications", notificationId);
+            batch.update(ref, { read: true });
+            await batch.commit();
+        } catch (error) {
+            console.error("Failed to mark as read", error);
+        }
+    };
+
+    const markAllAsRead = async () => {
+        try {
+            const batch = writeBatch(db);
+            notifications.forEach((n) => {
+                const ref = doc(db, "notifications", n.id);
+                batch.update(ref, { read: true });
+            });
+            await batch.commit();
+        } catch (error) {
+            console.error("Failed to mark all as read", error);
+        }
+    };
+
     const topStamp = Object.entries(stats).sort((a, b) => b[1] - a[1])[0]?.[0];
 
     return (
@@ -162,6 +220,69 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
                             >
                                 <span style={{ fontSize: "1.2rem" }}>💬</span> LINEで連携して保存する
                             </button>
+                        </section>
+                    )}
+
+                    {/* お知らせセクション */}
+                    {notifications.length > 0 && (
+                        <section style={{ marginBottom: "2rem" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                                <h3 style={{ fontSize: "1rem", opacity: 0.8 }}>お知らせ 🔔</h3>
+                                <button
+                                    onClick={markAllAsRead}
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        color: "var(--accent-gold)",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer",
+                                        textDecoration: "underline"
+                                    }}
+                                >
+                                    すべて既読にする
+                                </button>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                                {notifications.map((n) => (
+                                    <div key={n.id} style={{
+                                        background: "linear-gradient(135deg, rgba(198, 166, 100, 0.2) 0%, rgba(198, 166, 100, 0.05) 100%)",
+                                        padding: "1rem",
+                                        borderRadius: "1rem",
+                                        border: "1px solid rgba(198, 166, 100, 0.3)",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        animation: "fadeIn 0.5s ease-out"
+                                    }}>
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ fontSize: "0.9rem", fontWeight: "bold" }}>
+                                                🥂 {n.senderNickname}さんがあなたの「{n.coffeeName}」に乾杯しました！
+                                            </p>
+                                            <p style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.2rem" }}>
+                                                {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString("ja-JP") : "たった今"}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => markAsRead(n.id)}
+                                            style={{
+                                                background: "rgba(255,255,255,0.1)",
+                                                border: "none",
+                                                color: "var(--text-main)",
+                                                width: "30px",
+                                                height: "30px",
+                                                borderRadius: "15px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                cursor: "pointer",
+                                                fontSize: "0.8rem"
+                                            }}
+                                        >
+                                            ✓
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </section>
                     )}
 
