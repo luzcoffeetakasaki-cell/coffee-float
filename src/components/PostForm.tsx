@@ -40,10 +40,24 @@ export default function PostForm() {
         fetchProfile();
 
         // ?cafe=店舗名 があれば自動入力
-        const cafeParam = searchParams.get("cafe");
+        const getCafeFromUrl = () => {
+            const fromParams = searchParams.get("cafe");
+            if (fromParams) return fromParams;
+            if (typeof window !== "undefined") {
+                const params = new URLSearchParams(window.location.search);
+                return params.get("cafe");
+            }
+            return null;
+        };
+
+        const cafeParam = getCafeFromUrl();
         if (cafeParam) {
             setLocation(cafeParam);
-            setIsOpen(true); // パラメーターがあれば自動でフォームを開く
+            // 少し遅延させて、マウント後に確実に開くようにする
+            const timer = setTimeout(() => {
+                setIsOpen(true);
+            }, 500);
+            return () => clearTimeout(timer);
         }
     }, [searchParams]);
 

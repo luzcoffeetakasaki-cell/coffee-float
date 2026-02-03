@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import FloatingArea from "@/components/FloatingArea";
 import PostForm from "@/components/PostForm";
 import Disclaimer from "@/components/Disclaimer";
@@ -57,7 +57,9 @@ export default function Home() {
       </div>
 
       <FloatingArea />
-      <PostForm />
+      <Suspense fallback={null}>
+        <PostForm />
+      </Suspense>
       <Disclaimer />
 
       {showMyPage && <MyPage onClose={() => setShowMyPage(false)} />}
