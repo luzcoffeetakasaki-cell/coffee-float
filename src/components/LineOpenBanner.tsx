@@ -42,9 +42,9 @@ export default function LineOpenBanner() {
             href={targetUrl}
             style={{
                 position: "fixed",
-                bottom: "1.5rem",
+                top: "1.5rem",
                 right: "1.5rem",
-                zIndex: 999,
+                zIndex: 90, // MyPage(150)より下、FAB(100)とは被らない位置
                 background: "#06C755",
                 color: "white",
                 padding: "0.8rem 1.2rem",
