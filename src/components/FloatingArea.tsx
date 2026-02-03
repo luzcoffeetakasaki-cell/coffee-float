@@ -154,17 +154,34 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
     // バリエーション定義
     const variants: Variants = {
         far: {
-            scale: 0.7,
+            scale: 0.8,
             filter: "blur(2px)",
             opacity: 0.8,
             zIndex: 1,
+            borderRadius: "50%", // 遠くでは丸い泡
+            width: "90px", // 固定サイズ
+            height: "90px",
+            padding: "0.5rem",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            display: "flex", // 中央揃え用
+            flexDirection: "column",
             transition: { duration: 8 + Math.random() * 5, ease: "easeInOut" }
         },
         near: {
             scale: 1.1,
             filter: "blur(0px)",
             opacity: 1,
-            zIndex: 10,
+            zIndex: 100,
+            borderRadius: "24px", // 近くでは読みやすい四角
+            width: "auto", // コンテンツに合わせて広がる
+            height: "auto",
+            padding: "1rem",
+            justifyContent: "flex-start",
+            alignItems: "flex-start",
+            textAlign: "left",
+            display: "block",
             transition: { duration: 8 + Math.random() * 5, ease: "easeInOut" }
         }
     };
@@ -189,6 +206,7 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
     return (
         <motion.div
             className={`bubble ${isMine ? "my-post" : ""}`}
+            layout // レイアウト変更（サイズ変化）を滑らかに
             style={{
                 left: initialPos.left,
                 top: initialPos.top,
@@ -200,11 +218,10 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                     : "rgba(255, 255, 255, 0.1)", // 他人: 透過ガラス
                 backdropFilter: "blur(8px)",
                 WebkitBackdropFilter: "blur(8px)",
-                zIndex: (isNear || isMine) ? 100 : 1, // 手前(Near)の時は確実に前面に持ってくる
-                padding: "1rem",
-                minWidth: "140px",
+                // zIndex is controlled by variants
+                padding: "1rem", // variantsで上書きされるが初期値として
+                minWidth: "auto",
                 maxWidth: "200px",
-                color: "#f5ebe0", // 基本は白系（自分も他人も）
                 cursor: "pointer",
             }}
             animate={floatAnim} // XYアニメーション
