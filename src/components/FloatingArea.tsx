@@ -127,83 +127,23 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
     const [initialPos, setInitialPos] = useState<{ left: string; top: string } | null>(null);
     const [floatAnim, setFloatAnim] = useState<any>(null);
 
-    // 奥行きアニメーション用 (0: 奥, 1: 手前)
-    // 自分の投稿は常に少し手前寄りにして見つけやすくする
-    // const [depth, setDepth] = useState(isMine ? 0.8 : Math.random()); 
-
     useEffect(() => {
-        // 初期位置 (画面端すぎないように)
-        const left = Math.random() * 80 + 10; // 10% - 90%
-        const top = Math.random() * 80 + 10; // 10% - 90%
+        // 初期位置
+        const left = Math.random() * 80 + 10;
+        const top = Math.random() * 80 + 10;
         setInitialPos({ left: `${left}%`, top: `${top}%` });
 
-        // 浮遊アニメーション (ランダムな動き)
+        // 浮遊アニメーション
         setFloatAnim({
-            x: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
-            y: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
+            x: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
+            y: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
+            rotate: [0, Math.random() * 4 - 2, Math.random() * 4 - 2, 0], // ほんの少し揺らす
             transition: {
-                duration: 10 + Math.random() * 10, // 10-20秒
+                duration: 15 + Math.random() * 10,
                 repeat: Infinity,
                 ease: "easeInOut",
             }
         });
-    }, []);
-
-    // 奥行きに基づいたスタイル計算
-    // depthは現在state管理だが、Framer Motionで滑らかに補間する
-    // バリエーション定義
-    const transitionSettings: any = { // 型エラー回避のため any (Framer Motionの型定義が厳密なため)
-        type: "spring",
-        stiffness: 40,  // バネの強さ（低いほど柔らかい）
-        damping: 15,    // 振動の抑え（低いほど揺れる）
-        mass: 1.2       // 重さ（重いほどゆったり）
-    };
-
-    const variants: Variants = {
-        far: {
-            scale: 0.85,
-            filter: "blur(1.5px)",
-            opacity: 0.7,
-            zIndex: 1,
-            borderRadius: "50%",
-            width: "90px",
-            height: "90px",
-            padding: "0.5rem",
-            justifyContent: "center",
-            alignItems: "center",
-            textAlign: "center",
-            display: "flex",
-            flexDirection: "column",
-            transition: transitionSettings
-        },
-        near: {
-            scale: 1.05, // 大きくしすぎないことで動きを上品に
-            filter: "blur(0px)",
-            opacity: 1,
-            zIndex: 100,
-            borderRadius: "24px",
-            width: "auto",
-            height: "auto",
-            padding: "1.2rem",
-            justifyContent: "flex-start",
-            alignItems: "flex-start",
-            textAlign: "left",
-            display: "block",
-            transition: transitionSettings
-        }
-    };
-
-    // 現在の状態（ランダムに切り替える）
-    const [isNear, setIsNear] = useState(Math.random() > 0.5);
-
-    useEffect(() => {
-        const toggle = () => {
-            setIsNear(prev => !prev);
-            // 次の切り替えまでの時間をランダムに
-            setTimeout(toggle, 8000 + Math.random() * 8000);
-        };
-        const timer = setTimeout(toggle, Math.random() * 5000);
-        return () => clearTimeout(timer);
     }, []);
 
     const stamp = post.flavorStamp ? STAMPS[post.flavorStamp] : null;
@@ -213,96 +153,72 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
     return (
         <motion.div
             className={`bubble ${isMine ? "my-post" : ""}`}
-            layout // レイアウト変更（サイズ変化）を滑らかに
             style={{
                 left: initialPos.left,
                 top: initialPos.top,
                 position: 'absolute',
+                // カプセル型デザイン
                 border: isMine ? "1px solid #C6A664" : "1px solid rgba(255, 255, 255, 0.2)",
-                boxShadow: isMine ? "0 4px 20px rgba(198, 166, 100, 0.4)" : "0 4px 15px rgba(0, 0, 0, 0.1)",
+                boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0, 0, 0, 0.1)",
                 background: isMine
-                    ? "linear-gradient(135deg, rgba(60, 40, 30, 0.95) 0%, rgba(30, 15, 10, 0.95) 100%)" // 自分: 濃厚なコーヒー色
-                    : "rgba(255, 255, 255, 0.1)", // 他人: 透過ガラス
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                // zIndex is controlled by variants
-                padding: "1rem", // variantsで上書きされるが初期値として
-                minWidth: "auto",
-                maxWidth: "200px",
+                    ? "linear-gradient(135deg, rgba(60, 40, 30, 0.95) 0%, rgba(30, 15, 10, 0.95) 100%)"
+                    : "rgba(255, 255, 255, 0.15)",
+                backdropFilter: "blur(5px)",
+                WebkitBackdropFilter: "blur(5px)",
+                zIndex: isMine ? 100 : 10, // 自分の投稿を少し優先
+
+                borderRadius: "50px", // 完全なカプセル形状
+                padding: "0.5rem 1rem",
+                width: "auto",
+                maxWidth: "240px",
+                height: "auto",
+
+                display: "flex",
+                alignItems: "center",
+                gap: "0.8rem",
                 cursor: "pointer",
             }}
-            animate={floatAnim} // XYアニメーション
-            drag // ドラッグ可能にする
-            dragMomentum={false} // 離した時に慣性で飛ばないようにする
-            whileHover={{ scale: 1.1, cursor: "grab" }}
-            whileDrag={{ scale: 1.2, cursor: "grabbing" }}
+            animate={floatAnim}
+            drag
+            dragMomentum={false}
+            whileHover={{ scale: 1.05, cursor: "grab", zIndex: 200 }}
+            whileDrag={{ scale: 1.1, cursor: "grabbing", zIndex: 200 }}
             onClick={onClick}
         >
-            {/* ここで2重motionにする */}
-            <motion.div
-                animate={isNear || isMine ? "near" : "far"} // 自分の投稿は常にNear(またはNear寄り)
-                variants={variants}
-                style={{ width: "100%", height: "100%" }}
-            >
-                {stamp && (
-                    <div style={{
-                        fontSize: "0.7rem",
-                        fontWeight: "bold",
-                        color: stamp.color,
-                        marginBottom: "0.2rem",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.3rem"
-                    }}>
-                        <span style={{ fontSize: "1rem" }}>{stamp.icon}</span>{post.flavorStamp}
-                    </div>
-                )}
-                {/* Nickname Display */}
+            {/* スタンプ（アイコン） */}
+            {stamp && (
+                <div style={{
+                    fontSize: "1.2rem",
+                    filter: isMine ? "none" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+                }}>
+                    {stamp.icon}
+                </div>
+            )}
+
+            {/* テキスト情報（縦並び） */}
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 {post.nickname && (
                     <div style={{
-                        fontSize: "0.75rem",
-                        color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.7)",
-                        marginBottom: "0.1rem",
-                        fontWeight: "bold"
+                        fontSize: "0.65rem",
+                        color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.8)",
+                        marginBottom: "0rem",
+                        fontWeight: "bold",
+                        whiteSpace: "nowrap"
                     }}>
                         @{post.nickname}
                     </div>
                 )}
                 <div style={{
-                    fontSize: "1rem",
-                    color: isMine ? "#C6A664" : "#ffffff", // 自分はゴールド、他人は白
-                    marginBottom: "0.4rem",
-                    lineHeight: "1.3"
+                    fontSize: "0.9rem",
+                    color: isMine ? "#C6A664" : "#ffffff",
+                    lineHeight: "1.2",
+                    whiteSpace: "nowrap",
+                    fontWeight: "bold",
+                    textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)"
                 }}>
-                    <strong>{post.coffeeName}</strong>
+                    {post.coffeeName}
                 </div>
-                {/* コメント部分は Near の時だけ表示 (opacityアニメーション) */}
-                <motion.div
-                    animate={{
-                        opacity: (isNear || isMine) ? 1 : 0,
-                        height: (isNear || isMine) ? "auto" : 0,
-                        marginBottom: (isNear || isMine) ? "0" : "0" // 詰める
-                    }}
-                    transition={{ duration: 1 }}
-                    style={{
-                        color: isMine ? "#f5ebe0" : "rgba(255, 255, 255, 0.9)",
-                        fontSize: "0.85rem",
-                        lineHeight: "1.5",
-                        overflow: "hidden", // heightアニメーション用
-                        fontWeight: "500",
-                        textShadow: isMine ? "none" : "0 1px 3px rgba(0,0,0,0.5)"
-                    }}
-                >
-                    <div style={{ // 内部divでLineClamp
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                    }}>
-                        {post.flavorText}
-                    </div>
-                </motion.div>
-            </motion.div>
+            </div>
         </motion.div>
     );
 }
