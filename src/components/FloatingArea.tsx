@@ -204,7 +204,10 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                     whiteSpace: "nowrap",
                     fontWeight: "bold",
                     marginBottom: "0.1rem",
-                    textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)"
+                    textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: "150px" // コーヒー名の幅制限
                 }}>
                     {post.coffeeName}
                 </div>
@@ -221,7 +224,10 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                         <div style={{
                             color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.8)",
                             fontWeight: "bold",
-                            whiteSpace: "nowrap"
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "70px" // ニックネームの幅制限
                         }}>
                             {post.nickname}
                         </div>
@@ -235,9 +241,13 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                             whiteSpace: "nowrap",
                             display: "flex",
                             alignItems: "center",
-                            gap: "0.1rem"
+                            gap: "0.1rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "70px" // 場所の幅制限
                         }}>
-                            <span style={{ fontSize: "0.6rem" }}>📍</span>{post.location}
+                            <span style={{ fontSize: "0.6rem" }}>📍</span>
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{post.location}</span>
                         </div>
                     )}
                 </div>
