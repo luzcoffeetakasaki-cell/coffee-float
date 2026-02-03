@@ -27,40 +27,17 @@ const STAMPS: Record<string, { color: string; icon: string }> = {
     FLORAL: { color: "#B39DDB", icon: "🌸" },
 };
 
-const MOCK_POSTS: Post[] = [
-    {
-        id: "mock1",
-        userId: "mock_user_1",
-        nickname: "エチオピア好き",
-        coffeeName: "エチオピア イルガチェフェ",
-        location: "お気に入りのカフェ",
-        flavorText: "フローラルで華やかな香りがたまらない！✨ 紅茶みたいにスッキリしてる。",
-        flavorStamp: "FLORAL",
-        likes: 5,
-        createdAt: { toDate: () => new Date() } as any,
-    },
-    {
-        id: "mock2",
-        userId: "mock_user_2",
-        nickname: "深煎りマニア",
-        coffeeName: "マンデリン G1",
-        location: "自宅キッチン",
-        flavorText: "ガツンとくる苦味とこく. バターたっぷりトーストに最高に合う☕️",
-        flavorStamp: "BITTER",
-        likes: 3,
-        createdAt: { toDate: () => new Date(Date.now() - 1000 * 60 * 30) } as any,
-    },
-    {
-        id: "mock3",
-        userId: "mock_user_3",
-        nickname: "旅するカフェ店員",
-        coffeeName: "ゲイシャ ナチュラル",
-        location: "代々木公園",
-        flavorText: "ジャスミンみたいな香りと、冷めてからのベリー系の甘みが最高...！",
-        flavorStamp: "JUICY",
-        likes: 10,
-        createdAt: { toDate: () => new Date(Date.now() - 1000 * 60 * 60 * 2) } as any,
-    },
+const TRIVIA_POSTS: Post[] = [
+    { id: "trivia1", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：発見の伝説", location: "エチオピア", flavorText: "コーヒーは9世紀頃、ヤギ飼いのカルディが「ヤギが赤い実を食べて興奮している」のを見て発見されたと言われています🐐", flavorStamp: "BITTER", likes: 100, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia2", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：カフェイン量", location: "焙煎所", flavorText: "実は「深煎り」よりも「浅煎り」の方が、豆の体積あたりのカフェイン含有量は少し多いんですよ💡", flavorStamp: "JUICY", likes: 82, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia3", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：種です", location: "農園", flavorText: "コーヒー豆は「豆」と呼ばれていますが、植物学的には「コーヒーノキの果実（チェリー）の種」なんです🍒", flavorStamp: "SWEET", likes: 95, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia4", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：語源", location: "アラビア", flavorText: "「コーヒー（Coffee）」の語源は、アラビア語の「カフワ（Qahwa/ワインの意味）」から来ています🍷", flavorStamp: "FLORAL", likes: 76, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia5", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：消費量", location: "フィンランド", flavorText: "世界で一番コーヒーを飲む国はフィンランド！一人当たり1日4〜5杯も飲むそうですよ🇫🇮", flavorStamp: "JUICY", likes: 120, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia6", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：アメリカーノ", location: "イタリア", flavorText: "「アメリカーノ」は、第二次大戦中に米兵がエスプレッソをお湯で薄めて飲んだのが始まりだとか🇺🇸", flavorStamp: "BITTER", likes: 64, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia7", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：世界三大", location: "タンザニア", flavorText: "世界三大コーヒーといえば、「ブルーマウンテン（ジャマイカ）」「コナ（ハワイ）」そして「キリマンジャロ（タンザニア）」です⛰️", flavorStamp: "BITTER", likes: 88, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia8", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：デカフェ", location: "実験室", flavorText: "デカフェ（カフェインレス）でも、実はごく微量のカフェインは残っていることが多いんです☕️", flavorStamp: "SWEET", likes: 55, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia9", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：カプチーノ", location: "修道院", flavorText: "「カプチーノ」の名前は、カプチン修道会の修道士が着ていた茶色の服の色に似ていたから…という説があります🙏", flavorStamp: "SWEET", likes: 90, createdAt: { toDate: () => new Date() } as any },
+    { id: "trivia10", userId: "master", nickname: "Coffee Float Master", coffeeName: "豆知識：エスプレッソ", location: "イタリア", flavorText: "「エスプレッソ」はイタリア語で「急行」の意味。「注文を受けてから急速に淹れる」ことから来ています🚆", flavorStamp: "BITTER", likes: 110, createdAt: { toDate: () => new Date() } as any },
 ];
 
 export default function FloatingArea() {
@@ -76,7 +53,7 @@ export default function FloatingArea() {
         // Firebase設定が不完全な場合はデモ用データを表示
         if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
             console.warn("Firebase API Key is missing. Running in DEMO MODE.");
-            setPosts(MOCK_POSTS);
+            setPosts(TRIVIA_POSTS);
             return;
         }
 
@@ -93,14 +70,14 @@ export default function FloatingArea() {
                     id: doc.id,
                     ...doc.data(),
                 })) as Post[];
-                // データが空の場合はモックを表示
-                setPosts(newPosts.length > 0 ? newPosts : MOCK_POSTS);
+                // データが空の場合は豆知識（Bot）を表示
+                setPosts(newPosts.length > 0 ? newPosts : TRIVIA_POSTS);
             });
 
             return () => unsubscribe();
         } catch (error) {
             console.error("Firebase connection error. Falling back to DEMO MODE.", error);
-            setPosts(MOCK_POSTS);
+            setPosts(TRIVIA_POSTS);
         }
     }, []);
 
