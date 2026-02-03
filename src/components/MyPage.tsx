@@ -38,7 +38,14 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
+    const [nickname, setNickname] = useState("");
+    const [isEditingName, setIsEditingName] = useState(false);
     const isPWA = usePWA();
+
+    useEffect(() => {
+        const storedName = localStorage.getItem("coffee_float_nickname");
+        if (storedName) setNickname(storedName);
+    }, []);
 
     useEffect(() => {
         const init = async () => {
@@ -174,7 +181,46 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
             color: "var(--text-main)",
         }}>
             <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-                <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)" }}>My Coffee Karte 📊</h2>
+                <div>
+                    <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)", marginBottom: "0.2rem" }}>My Coffee Karte 📊</h2>
+                    <div style={{ fontSize: "0.9rem", opacity: 0.8, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        {isEditingName ? (
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    localStorage.setItem("coffee_float_nickname", nickname);
+                                    setIsEditingName(false);
+                                }}
+                                style={{ display: "flex", gap: "0.5rem" }}
+                            >
+                                <input
+                                    value={nickname}
+                                    onChange={(e) => setNickname(e.target.value)}
+                                    style={{
+                                        padding: "0.2rem 0.5rem",
+                                        borderRadius: "0.3rem",
+                                        border: "1px solid var(--accent-gold)",
+                                        background: "rgba(0,0,0,0.3)",
+                                        color: "white",
+                                        fontSize: "0.9rem"
+                                    }}
+                                    autoFocus
+                                />
+                                <button type="submit" style={{ cursor: "pointer", background: "none", border: "none" }}>✅</button>
+                            </form>
+                        ) : (
+                            <>
+                                <span>👤 {nickname || "名無しのコーヒー好き"}</span>
+                                <button
+                                    onClick={() => setIsEditingName(true)}
+                                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", opacity: 0.7 }}
+                                >
+                                    ✏️
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
                 <button onClick={onClose} style={{
                     background: "none",
                     border: "none",
