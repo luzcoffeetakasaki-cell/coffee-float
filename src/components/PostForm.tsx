@@ -23,18 +23,13 @@ export default function PostForm() {
         { label: "FLORAL", color: "#B39DDB", icon: "🌸" },
     ];
 
-    // LIFFプロフィール取得
+    // ニックネームの読み込み (localStorage)
     useEffect(() => {
-        if (isOpen && !nickname) {
-            const fetchProfile = async () => {
-                const profile = await getLiffProfile();
-                if (profile?.displayName) {
-                    setNickname(profile.displayName);
-                }
-            };
-            fetchProfile();
+        const savedNickname = localStorage.getItem("coffee_float_nickname");
+        if (savedNickname) {
+            setNickname(savedNickname);
         }
-    }, [isOpen, nickname]);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,6 +57,11 @@ export default function PostForm() {
                 setFlavorStamp(null);
                 setIsOpen(false);
                 return;
+            }
+
+            // ニックネーム保存 (次回用にブラウザに記録)
+            if (nickname) {
+                localStorage.setItem("coffee_float_nickname", nickname);
             }
 
             await addDoc(collection(db, "posts"), {
