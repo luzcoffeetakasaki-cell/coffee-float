@@ -156,13 +156,14 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 left: initialPos.left,
                 top: initialPos.top,
                 position: 'absolute',
-                border: isMine ? "3px solid #C6A664" : "1px solid rgba(0,0,0,0.1)", // 枠線をはっきりと
+                border: isMine ? "3px solid #C6A664" : "1px solid rgba(255,255,255,0.4)",
                 boxShadow: isMine ? "0 4px 25px rgba(198, 166, 100, 0.6)" : "0 4px 15px rgba(0,0,0,0.1)",
-                background: isMine ? "rgba(255, 252, 235, 0.98)" : "rgba(255, 255, 255, 0.95)", // 背景をほぼ不透明に
+                background: isMine ? "rgba(255, 250, 240, 0.98)" : "rgba(255, 255, 255, 0.92)",
                 zIndex: isMine ? 10 : 1,
-                padding: "1rem", // パディングを増やして余裕を持たせる
+                padding: "1rem",
                 minWidth: "140px",
-                maxWidth: "200px"
+                maxWidth: "200px",
+                color: "#2c1810", // ベースの文字色を濃い茶色に（背景白に対して高コントラスト）
             }}
             animate={floatAnim}
             drag // ドラッグ可能にする
@@ -173,26 +174,26 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
         >
             {stamp && (
                 <div style={{
-                    fontSize: "0.6rem",
+                    fontSize: "0.7rem",
                     fontWeight: "bold",
                     color: stamp.color,
                     marginBottom: "0.2rem",
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.2rem"
+                    gap: "0.3rem"
                 }}>
-                    <span>{stamp.icon}</span>{post.flavorStamp}
+                    <span style={{ fontSize: "1rem" }}>{stamp.icon}</span>{post.flavorStamp}
                 </div>
             )}
-            <div style={{ fontSize: "1rem", color: "#333", marginBottom: "0.3rem", lineHeight: "1.3" }}>
+            <div style={{ fontSize: "1rem", color: "#1a0f0a", marginBottom: "0.4rem", lineHeight: "1.3" }}>
                 <strong>{post.coffeeName}</strong>
             </div>
             <div style={{
-                color: "#555",
+                color: "#4a3b32", // 少しだけ淡いが十分濃い茶色
                 fontSize: "0.85rem",
                 lineHeight: "1.5",
                 display: "-webkit-box",
-                WebkitLineClamp: 3, // 3行まで表示
+                WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
                 fontWeight: "500"
