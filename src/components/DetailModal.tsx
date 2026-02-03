@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { doc, updateDoc, increment, setDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import { doc, updateDoc, increment, setDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentUserId } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,10 +38,63 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
     const [particles, setParticles] = useState<{ id: number; x: number; y: number; icon: string }[]>([]);
     const [currentLikes, setCurrentLikes] = useState(post.likes);
 
-    // Propsの更新をローカルステートに反映
+    // 編集・削除用ステート
+    const [isOwner, setIsOwner] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editCoffeeName, setEditCoffeeName] = useState(post.coffeeName);
+    const [editLocation, setEditLocation] = useState(post.location);
+    const [editFlavorText, setEditFlavorText] = useState(post.flavorText);
+    const [editFlavorStamp, setEditFlavorStamp] = useState(post.flavorStamp);
+
+    // オーナー確認
+    useEffect(() => {
+        getCurrentUserId().then(id => {
+            if (id && id === post.userId) {
+                setIsOwner(true);
+            }
+        });
+    }, [post.userId]);
+
+    // Propsの更新
     if (post.likes !== currentLikes && post.likes > currentLikes) {
         setCurrentLikes(post.likes);
     }
+
+    const handleDelete = async () => {
+        if (!confirm("本当にこの投稿を削除しますか？\n（削除すると元に戻せません）")) return;
+        try {
+
+            await deleteDoc(doc(db, "posts", post.id));
+            alert("投稿を削除しました🗑️");
+            onClose();
+        } catch (e) {
+            console.error("Delete failed", e);
+            alert("削除に失敗しました...");
+        }
+    };
+
+    const handleUpdate = async () => {
+        try {
+            await updateDoc(doc(db, "posts", post.id), {
+                coffeeName: editCoffeeName,
+                location: editLocation,
+                flavorText: editFlavorText,
+                flavorStamp: editFlavorStamp
+            });
+
+            // ローカルの表示も更新（親コンポーネントの再レンダリングを待たずに反映させるため）
+            post.coffeeName = editCoffeeName;
+            post.location = editLocation;
+            post.flavorText = editFlavorText;
+            post.flavorStamp = editFlavorStamp;
+
+            setIsEditing(false);
+            alert("投稿を更新しました✨");
+        } catch (e) {
+            console.error("Update failed", e);
+            alert("更新に失敗しました...");
+        }
+    };
 
     const handleShare = async () => {
         const shareUrl = `${SHARE_BASE_URL}/${post.id}`;
@@ -143,146 +196,304 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <button
-                    style={{
-                        position: "absolute",
-                        top: "1rem",
-                        right: "1.5rem",
-                        background: "none",
-                        border: "none",
-                        color: "var(--accent-gold)",
-                        fontSize: "1.5rem",
-                        cursor: "pointer",
-                    }}
-                    onClick={onClose}
-                >
-                    ×
-                </button>
+                <div style={{
+                    position: "absolute",
+                    top: "1rem",
+                    right: "1.5rem",
+                    display: "flex",
+                    gap: "1rem",
+                    zIndex: 20
+                }}>
+                    {isOwner && !isEditing && (
+                        <>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "var(--accent-gold)",
+                                    fontSize: "1.2rem",
+                                    cursor: "pointer",
+                                    opacity: 0.8
+                                }}
+                            >
+                                ✏️
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#FF6B6B",
+                                    fontSize: "1.2rem",
+                                    cursor: "pointer",
+                                    opacity: 0.8
+                                }}
+                            >
+                                🗑️
+                            </button>
+                        </>
+                    )}
+                    <button
+                        style={{
+                            background: "none",
+                            border: "none",
+                            color: "var(--accent-gold)",
+                            fontSize: "1.5rem",
+                            cursor: "pointer",
+                        }}
+                        onClick={onClose}
+                    >
+                        ×
+                    </button>
+                </div>
 
                 <div style={{ marginBottom: "0.5rem", opacity: 0.7, fontSize: "0.8rem" }}>
-                    {dateStr} @ {post.location || "どこか"}
+                    {dateStr}
+                    {isEditing ? (
+                        <span style={{ marginLeft: "0.5rem" }}>
+                            @ <input
+                                value={editLocation}
+                                onChange={(e) => setEditLocation(e.target.value)}
+                                placeholder="場所"
+                                style={{
+                                    background: "rgba(255,255,255,0.1)",
+                                    border: "none",
+                                    color: "white",
+                                    padding: "0.2rem",
+                                    borderRadius: "4px",
+                                    fontSize: "0.8rem",
+                                    width: "120px"
+                                }}
+                            />
+                        </span>
+                    ) : (
+                        ` @ ${post.location || "どこか"}`
+                    )}
                 </div>
-                {post.flavorStamp && STAMPS[post.flavorStamp] && (
+
+                {isEditing ? (
+                    <div style={{ marginBottom: "1rem" }}>
+                        {Object.entries(STAMPS).map(([key, s]) => (
+                            <button
+                                key={key}
+                                onClick={() => setEditFlavorStamp(key)}
+                                style={{
+                                    display: "inline-block",
+                                    padding: "0.3rem 0.6rem",
+                                    borderRadius: "1rem",
+                                    fontSize: "0.75rem",
+                                    fontWeight: "bold",
+                                    backgroundColor: editFlavorStamp === key ? `${s.color}44` : "rgba(255,255,255,0.05)",
+                                    color: s.color,
+                                    border: `1px solid ${s.color}`,
+                                    marginRight: "0.5rem",
+                                    marginBottom: "0.5rem",
+                                    cursor: "pointer",
+                                    opacity: editFlavorStamp === key ? 1 : 0.5
+                                }}
+                            >
+                                {s.icon} {key}
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    post.flavorStamp && STAMPS[post.flavorStamp] && (
+                        <div style={{
+                            display: "inline-block",
+                            padding: "0.3rem 0.8rem",
+                            borderRadius: "1rem",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            backgroundColor: `${STAMPS[post.flavorStamp].color}22`,
+                            color: STAMPS[post.flavorStamp].color,
+                            border: `1px solid ${STAMPS[post.flavorStamp].color}`,
+                            marginBottom: "0.8rem"
+                        }}>
+                            {STAMPS[post.flavorStamp].icon} {post.flavorStamp}
+                        </div>
+                    )
+                )}
+
+                {isEditing ? (
+                    <input
+                        value={editCoffeeName}
+                        onChange={(e) => setEditCoffeeName(e.target.value)}
+                        placeholder="コーヒー名"
+                        style={{
+                            fontSize: "1.5rem",
+                            color: "var(--accent-gold)",
+                            background: "rgba(255,255,255,0.1)",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "0.5rem",
+                            width: "100%",
+                            marginBottom: "1rem",
+                            fontWeight: "bold"
+                        }}
+                    />
+                ) : (
+                    <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)", marginBottom: "1rem" }}>
+                        {post.coffeeName}
+                    </h2>
+                )}
+
+                {isEditing ? (
+                    <textarea
+                        value={editFlavorText}
+                        onChange={(e) => setEditFlavorText(e.target.value)}
+                        placeholder="味わいや感想..."
+                        rows={4}
+                        style={{
+                            fontSize: "1.1rem",
+                            lineHeight: "1.6",
+                            padding: "1rem",
+                            background: "rgba(255,255,255,0.1)",
+                            borderRadius: "1rem",
+                            marginBottom: "1.5rem",
+                            width: "100%",
+                            border: "none",
+                            color: "var(--text-main)",
+                            resize: "none"
+                        }}
+                    />
+                ) : (
                     <div style={{
-                        display: "inline-block",
-                        padding: "0.3rem 0.8rem",
+                        fontSize: "1.1rem",
+                        lineHeight: "1.6",
+                        padding: "1rem",
+                        background: "rgba(255,255,255,0.05)",
                         borderRadius: "1rem",
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        backgroundColor: `${STAMPS[post.flavorStamp].color}22`,
-                        color: STAMPS[post.flavorStamp].color,
-                        border: `1px solid ${STAMPS[post.flavorStamp].color}`,
-                        marginBottom: "0.8rem"
+                        marginBottom: "1.5rem"
                     }}>
-                        {STAMPS[post.flavorStamp].icon} {post.flavorStamp}
+                        {post.flavorText}
                     </div>
                 )}
-                <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)", marginBottom: "1rem" }}>
-                    {post.coffeeName}
-                </h2>
 
-                <div style={{
-                    fontSize: "1.1rem",
-                    lineHeight: "1.6",
-                    padding: "1rem",
-                    background: "rgba(255,255,255,0.05)",
-                    borderRadius: "1rem",
-                    marginBottom: "1.5rem"
-                }}>
-                    {post.flavorText}
-                </div>
+                {isEditing ? (
+                    <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "2rem" }}>
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            style={{
+                                padding: "0.8rem 2rem",
+                                borderRadius: "2rem",
+                                border: "1px solid rgba(255,255,255,0.3)",
+                                background: "transparent",
+                                color: "var(--text-main)",
+                                cursor: "pointer"
+                            }}
+                        >
+                            キャンセル
+                        </button>
+                        <button
+                            onClick={handleUpdate}
+                            style={{
+                                padding: "0.8rem 2rem",
+                                borderRadius: "2rem",
+                                border: "none",
+                                background: "var(--accent-gold)",
+                                color: "#000",
+                                fontWeight: "bold",
+                                cursor: "pointer"
+                            }}
+                        >
+                            保存する
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ textAlign: "right", opacity: 0.8, marginBottom: "2rem" }}>
+                            — {post.nickname}
+                        </div>
 
-                <div style={{ textAlign: "right", opacity: 0.8, marginBottom: "2rem" }}>
-                    — {post.nickname}
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", position: "relative" }}>
-                    <AnimatePresence>
-                        {particles.map((p) => (
-                            <motion.div
-                                key={p.id}
-                                initial={{ opacity: 1, y: 0, x: p.x, scale: 0.5 }}
-                                animate={{ opacity: 0, y: -100, scale: 1.5 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 1 }}
+                        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", position: "relative" }}>
+                            <AnimatePresence>
+                                {particles.map((p) => (
+                                    <motion.div
+                                        key={p.id}
+                                        initial={{ opacity: 1, y: 0, x: p.x, scale: 0.5 }}
+                                        animate={{ opacity: 0, y: -100, scale: 1.5 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 1 }}
+                                        style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: "50%",
+                                            fontSize: "1.5rem",
+                                            pointerEvents: "none",
+                                            zIndex: 10
+                                        }}
+                                        onAnimationComplete={() => setParticles(prev => prev.filter(i => i.id !== p.id))}
+                                    >
+                                        {p.icon}
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                            <motion.button
+                                onClick={handleCheers}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.9 }}
                                 style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: "50%",
-                                    fontSize: "1.5rem",
-                                    pointerEvents: "none",
-                                    zIndex: 10
+                                    padding: "0.8rem 2rem",
+                                    borderRadius: "2rem",
+                                    border: "none",
+                                    backgroundColor: "var(--accent-gold)",
+                                    color: "#000",
+                                    cursor: "pointer",
+                                    fontSize: "1.2rem",
+                                    fontWeight: "bold",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.5rem",
+                                    boxShadow: "0 4px 15px rgba(198, 166, 100, 0.4)",
+                                    outline: "none"
                                 }}
-                                onAnimationComplete={() => setParticles(prev => prev.filter(i => i.id !== p.id))}
                             >
-                                {p.icon}
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                    <motion.button
-                        onClick={handleCheers}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.9 }}
-                        style={{
-                            padding: "0.8rem 2rem",
-                            borderRadius: "2rem",
-                            border: "none",
-                            backgroundColor: "var(--accent-gold)",
-                            color: "#000",
-                            cursor: "pointer",
-                            fontSize: "1.2rem",
-                            fontWeight: "bold",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            boxShadow: "0 4px 15px rgba(198, 166, 100, 0.4)",
-                            outline: "none"
-                        }}
-                    >
-                        🥂 乾杯！ ({currentLikes || 0})
-                    </motion.button>
-                </div>
+                                🥂 乾杯！ ({currentLikes || 0})
+                            </motion.button>
+                        </div>
 
-                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1.5rem" }}>
-                    <button
-                        onClick={handleShare}
-                        style={{
-                            padding: "0.8rem 2rem",
-                            borderRadius: "2rem",
-                            border: "none",
-                            backgroundColor: "rgba(255,255,255,0.1)",
-                            color: "var(--text-main)",
-                            cursor: "pointer",
-                            fontSize: "1rem",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            transition: "background 0.2s"
-                        }}
-                    >
-                        📤 シェアする
-                    </button>
-                    {/* LINEで直接開くボタン (Optional) */}
-                    <a
-                        href={`https://line.me/R/msg/text/?${encodeURIComponent(`${post.coffeeName} #CoffeeFloat\n${SHARE_BASE_URL}/${post.id}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            padding: "0.8rem 2rem",
-                            borderRadius: "2rem",
-                            border: "none",
-                            backgroundColor: "#06C755", // LINE Green
-                            color: "white",
-                            textDecoration: "none",
-                            fontSize: "1rem",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                        }}
-                    >
-                        LINEで送る
-                    </a>
-                </div>
+                        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1.5rem" }}>
+                            <button
+                                onClick={handleShare}
+                                style={{
+                                    padding: "0.8rem 2rem",
+                                    borderRadius: "2rem",
+                                    border: "none",
+                                    backgroundColor: "rgba(255,255,255,0.1)",
+                                    color: "var(--text-main)",
+                                    cursor: "pointer",
+                                    fontSize: "1rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.5rem",
+                                    transition: "background 0.2s"
+                                }}
+                            >
+                                📤 シェアする
+                            </button>
+                            <a
+                                href={`https://line.me/R/msg/text/?${encodeURIComponent(`${post.coffeeName} #CoffeeFloat\n${SHARE_BASE_URL}/${post.id}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    padding: "0.8rem 2rem",
+                                    borderRadius: "2rem",
+                                    border: "none",
+                                    backgroundColor: "#06C755", // LINE Green
+                                    color: "white",
+                                    textDecoration: "none",
+                                    fontSize: "1rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.5rem",
+                                }}
+                            >
+                                LINEで送る
+                            </a>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
