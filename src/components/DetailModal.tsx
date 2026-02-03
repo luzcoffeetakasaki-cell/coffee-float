@@ -34,6 +34,12 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
     if (!post) return null;
 
     const [particles, setParticles] = useState<{ id: number; x: number; y: number; icon: string }[]>([]);
+    const [currentLikes, setCurrentLikes] = useState(post.likes);
+
+    // Propsの更新をローカルステートに反映
+    if (post.likes !== currentLikes && post.likes > currentLikes) {
+        setCurrentLikes(post.likes);
+    }
 
     const handleShare = async () => {
         const shareUrl = `${SHARE_BASE_URL}/${post.id}`;
@@ -62,7 +68,8 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
             await updateDoc(postRef, {
                 likes: increment(1)
             });
-            // 楽観的UI更新はonSnapshotに任せるか、必要ならローカルstate導入
+            // 楽観的UI更新
+            setCurrentLikes(prev => prev + 1);
 
             // パーティクルエフェクト追加
             const icons = ["🥂", "✨", "🎉", "☕️"];
@@ -209,7 +216,7 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                             outline: "none"
                         }}
                     >
-                        🥂 乾杯！ ({post.likes || 0})
+                        🥂 乾杯！ ({currentLikes || 0})
                     </motion.button>
                 </div>
 
