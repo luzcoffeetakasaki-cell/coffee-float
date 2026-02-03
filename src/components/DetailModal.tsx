@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { doc, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Post {
     id: string;
@@ -31,6 +33,8 @@ const SHARE_BASE_URL = "https://coffee-float-x8lg.vercel.app/share";
 export default function DetailModal({ post, onClose }: DetailModalProps) {
     if (!post) return null;
 
+    const [particles, setParticles] = useState<{ id: number; x: number; y: number; icon: string }[]>([]);
+
     const handleShare = async () => {
         const shareUrl = `${SHARE_BASE_URL}/${post.id}`;
         const shareText = `${post.coffeeName} - ${post.flavorText} #CoffeeFloat`;
@@ -59,8 +63,17 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 likes: increment(1)
             });
             // 楽観的UI更新はonSnapshotに任せるか、必要ならローカルstate導入
-            // 今回はユーザーフィードバックとして簡単なalertやanimationを入れるのもありだが
-            // まずは機能実装。
+
+            // パーティクルエフェクト追加
+            const icons = ["🥂", "✨", "🎉", "☕️"];
+            const newParticles = Array.from({ length: 3 }).map((_, i) => ({
+                id: Date.now() + i,
+                x: Math.random() * 60 - 30, // -30 to 30
+                y: Math.random() * -20,
+                icon: icons[Math.floor(Math.random() * icons.length)]
+            }));
+            setParticles(prev => [...prev, ...newParticles]);
+
         } catch (error) {
             console.error("Cheers failed", error);
         }
@@ -153,9 +166,33 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                     — {post.nickname}
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
-                    <button
+                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", position: "relative" }}>
+                    <AnimatePresence>
+                        {particles.map((p) => (
+                            <motion.div
+                                key={p.id}
+                                initial={{ opacity: 1, y: 0, x: p.x, scale: 0.5 }}
+                                animate={{ opacity: 0, y: -100, scale: 1.5 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 1 }}
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: "50%",
+                                    fontSize: "1.5rem",
+                                    pointerEvents: "none",
+                                    zIndex: 10
+                                }}
+                                onAnimationComplete={() => setParticles(prev => prev.filter(i => i.id !== p.id))}
+                            >
+                                {p.icon}
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                    <motion.button
                         onClick={handleCheers}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.9 }}
                         style={{
                             padding: "0.8rem 2rem",
                             borderRadius: "2rem",
@@ -169,13 +206,11 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                             alignItems: "center",
                             gap: "0.5rem",
                             boxShadow: "0 4px 15px rgba(198, 166, 100, 0.4)",
-                            transition: "transform 0.1s"
+                            outline: "none"
                         }}
-                        onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-                        onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
                     >
                         🥂 乾杯！ ({post.likes || 0})
-                    </button>
+                    </motion.button>
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1.5rem" }}>
