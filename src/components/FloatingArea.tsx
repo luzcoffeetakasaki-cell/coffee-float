@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { motion } from "framer-motion";
 
 interface Post {
     id: string;
@@ -107,26 +108,46 @@ export default function FloatingArea() {
 
 function Bubble({ post, index, onClick }: { post: Post; index: number; onClick: () => void }) {
     // ランダムな位置とアニメーションの時間設定
-    const [style, setStyle] = useState<React.CSSProperties>({});
+    const [initialPos, setInitialPos] = useState<{ left: string; top: string } | null>(null);
+    const [floatAnim, setFloatAnim] = useState<any>(null);
 
     useEffect(() => {
-        const randomX = Math.random() * 80 + 5; // 5% - 85%
-        const randomY = Math.random() * 80 + 5; // 5% - 85%
-        const durationX = 15 + Math.random() * 20;
-        const durationY = 10 + Math.random() * 15;
-        const delay = -Math.random() * 20;
+        // 初期位置 (画面端すぎないように)
+        const left = Math.random() * 80 + 10; // 10% - 90%
+        const top = Math.random() * 80 + 10; // 10% - 90%
+        setInitialPos({ left: `${left}%`, top: `${top}%` });
 
-        setStyle({
-            left: `${randomX}%`,
-            top: `${randomY}%`,
-            animation: `floatX ${durationX}s ease-in-out ${delay}s infinite, floatY ${durationY}s ease-in-out ${delay}s infinite`,
+        // 浮遊アニメーション (ランダムな動き)
+        setFloatAnim({
+            x: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
+            y: [0, Math.random() * 40 - 20, Math.random() * 40 - 20, 0],
+            transition: {
+                duration: 10 + Math.random() * 10, // 10-20秒
+                repeat: Infinity,
+                ease: "easeInOut",
+            }
         });
     }, []);
 
     const stamp = post.flavorStamp ? STAMPS[post.flavorStamp] : null;
 
+    if (!initialPos) return null;
+
     return (
-        <div className="bubble" style={style} onClick={onClick}>
+        <motion.div
+            className="bubble"
+            style={{
+                left: initialPos.left,
+                top: initialPos.top,
+                position: 'absolute'
+            }}
+            animate={floatAnim}
+            drag // ドラッグ可能にする
+            dragMomentum={false} // 離した時に慣性で飛ばないようにする
+            whileHover={{ scale: 1.1, cursor: "grab" }}
+            whileDrag={{ scale: 1.2, cursor: "grabbing" }}
+            onClick={onClick}
+        >
             {stamp && (
                 <div style={{
                     fontSize: "0.6rem",
@@ -144,6 +165,6 @@ function Bubble({ post, index, onClick }: { post: Post; index: number; onClick: 
             <div style={{ opacity: 0.8, fontSize: "0.8rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "150px" }}>
                 {post.flavorText}
             </div>
-        </div>
+        </motion.div>
     );
 }
