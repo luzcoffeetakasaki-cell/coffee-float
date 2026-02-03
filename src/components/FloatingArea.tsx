@@ -156,10 +156,13 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 left: initialPos.left,
                 top: initialPos.top,
                 position: 'absolute',
-                border: isMine ? "2px solid #C6A664" : "1px solid rgba(255,255,255,0.3)",
-                boxShadow: isMine ? "0 4px 20px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0,0,0,0.1)",
-                background: isMine ? "rgba(255, 255, 240, 0.95)" : "rgba(255, 255, 255, 0.9)",
-                zIndex: isMine ? 10 : 1
+                border: isMine ? "3px solid #C6A664" : "1px solid rgba(0,0,0,0.1)", // 枠線をはっきりと
+                boxShadow: isMine ? "0 4px 25px rgba(198, 166, 100, 0.6)" : "0 4px 15px rgba(0,0,0,0.1)",
+                background: isMine ? "rgba(255, 252, 235, 0.98)" : "rgba(255, 255, 255, 0.95)", // 背景をほぼ不透明に
+                zIndex: isMine ? 10 : 1,
+                padding: "1rem", // パディングを増やして余裕を持たせる
+                minWidth: "140px",
+                maxWidth: "200px"
             }}
             animate={floatAnim}
             drag // ドラッグ可能にする
@@ -181,8 +184,19 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                     <span>{stamp.icon}</span>{post.flavorStamp}
                 </div>
             )}
-            <div><strong>{post.coffeeName}</strong></div>
-            <div style={{ opacity: 0.8, fontSize: "0.8rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "150px" }}>
+            <div style={{ fontSize: "1rem", color: "#333", marginBottom: "0.3rem", lineHeight: "1.3" }}>
+                <strong>{post.coffeeName}</strong>
+            </div>
+            <div style={{
+                color: "#555",
+                fontSize: "0.85rem",
+                lineHeight: "1.5",
+                display: "-webkit-box",
+                WebkitLineClamp: 3, // 3行まで表示
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                fontWeight: "500"
+            }}>
                 {post.flavorText}
             </div>
         </motion.div>
