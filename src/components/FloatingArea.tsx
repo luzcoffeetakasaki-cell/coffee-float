@@ -200,7 +200,7 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                     : "rgba(255, 255, 255, 0.1)", // 他人: 透過ガラス
                 backdropFilter: "blur(8px)",
                 WebkitBackdropFilter: "blur(8px)",
-                // zIndex: isMine ? 10 : 1, // Controlled by variants now
+                zIndex: (isNear || isMine) ? 100 : 1, // 手前(Near)の時は確実に前面に持ってくる
                 padding: "1rem",
                 minWidth: "140px",
                 maxWidth: "200px",
