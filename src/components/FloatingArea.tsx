@@ -197,39 +197,50 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
 
             {/* テキスト情報（縦並び） */}
             <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                {post.nickname && (
-                    <div style={{
-                        fontSize: "0.65rem",
-                        color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.8)",
-                        marginBottom: "0rem",
-                        fontWeight: "bold",
-                        whiteSpace: "nowrap"
-                    }}>
-                        @{post.nickname}
-                    </div>
-                )}
                 <div style={{
                     fontSize: "0.9rem",
                     color: isMine ? "#C6A664" : "#ffffff",
                     lineHeight: "1.2",
                     whiteSpace: "nowrap",
                     fontWeight: "bold",
+                    marginBottom: "0.1rem",
                     textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)"
                 }}>
                     {post.coffeeName}
                 </div>
-                {post.location && (
-                    <div style={{
-                        fontSize: "0.7rem",
-                        color: isMine ? "#8d7b68" : "rgba(255, 255, 255, 0.7)",
-                        marginTop: "0.1rem",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.1rem"
-                    }}>
-                        <span style={{ fontSize: "0.7rem" }}>📍</span> {post.location}
-                    </div>
-                )}
+
+                {/* Footer: Nickname & Location */}
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    fontSize: "0.65rem",
+                    opacity: 0.9
+                }}>
+                    {post.nickname && (
+                        <div style={{
+                            color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.8)",
+                            fontWeight: "bold",
+                            whiteSpace: "nowrap"
+                        }}>
+                            {post.nickname}
+                        </div>
+                    )}
+                    {post.nickname && post.location && (
+                        <span style={{ color: isMine ? "#a69b95" : "rgba(255,255,255,0.4)" }}>|</span>
+                    )}
+                    {post.location && (
+                        <div style={{
+                            color: isMine ? "#8d7b68" : "rgba(255, 255, 255, 0.7)",
+                            whiteSpace: "nowrap",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.1rem"
+                        }}>
+                            <span style={{ fontSize: "0.6rem" }}>📍</span>{post.location}
+                        </div>
+                    )}
+                </div>
             </div>
         </motion.div>
     );
