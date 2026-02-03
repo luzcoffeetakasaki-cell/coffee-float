@@ -6,9 +6,17 @@ interface Post {
     coffeeName: string;
     location: string;
     flavorText: string;
+    flavorStamp?: string | null;
     likes: number;
     createdAt: any; // Firebase Timestamp
 }
+
+const STAMPS: Record<string, { color: string; icon: string }> = {
+    SWEET: { color: "#FF8DA1", icon: "🍬" },
+    JUICY: { color: "#FFB347", icon: "🍊" },
+    BITTER: { color: "#A67C52", icon: "☕" },
+    FLORAL: { color: "#B39DDB", icon: "🌸" },
+};
 
 interface DetailModalProps {
     post: Post | null;
@@ -71,6 +79,21 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 <div style={{ marginBottom: "0.5rem", opacity: 0.7, fontSize: "0.8rem" }}>
                     {dateStr} @ {post.location || "どこか"}
                 </div>
+                {post.flavorStamp && STAMPS[post.flavorStamp] && (
+                    <div style={{
+                        display: "inline-block",
+                        padding: "0.3rem 0.8rem",
+                        borderRadius: "1rem",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        backgroundColor: `${STAMPS[post.flavorStamp].color}22`,
+                        color: STAMPS[post.flavorStamp].color,
+                        border: `1px solid ${STAMPS[post.flavorStamp].color}`,
+                        marginBottom: "0.8rem"
+                    }}>
+                        {STAMPS[post.flavorStamp].icon} {post.flavorStamp}
+                    </div>
+                )}
                 <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)", marginBottom: "1rem" }}>
                     {post.coffeeName}
                 </h2>

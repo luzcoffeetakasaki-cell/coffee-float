@@ -5,7 +5,7 @@ export const initLiff = async (liffId: string) => {
         await liff.init({ liffId });
         console.log("LIFF init success");
         if (!liff.isLoggedIn()) {
-            liff.login();
+            liff.login({ redirectUri: window.location.href });
         }
     } catch (error) {
         console.error("LIFF init failed", error);

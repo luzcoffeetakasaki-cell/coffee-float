@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getLiffProfile } from "@/lib/liff";
+import { checkNgWords } from "@/lib/filter";
 
 export default function PostForm() {
     const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +12,16 @@ export default function PostForm() {
     const [coffeeName, setCoffeeName] = useState("");
     const [location, setLocation] = useState("");
     const [flavorText, setFlavorText] = useState("");
+    const [flavorStamp, setFlavorStamp] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [ngWarning, setNgWarning] = useState<string | null>(null);
+
+    const STAMPS = [
+        { label: "SWEET", color: "#FF8DA1", icon: "🍬" },
+        { label: "JUICY", color: "#FFB347", icon: "🍊" },
+        { label: "BITTER", color: "#A67C52", icon: "☕" },
+        { label: "FLORAL", color: "#B39DDB", icon: "🌸" },
+    ];
 
     // LIFFプロフィール取得
     useEffect(() => {
@@ -30,6 +40,14 @@ export default function PostForm() {
         e.preventDefault();
         if (!coffeeName || !flavorText) return;
 
+        // NGワードチェック
+        const foundNg = checkNgWords(flavorText + coffeeName);
+        if (foundNg.length > 0) {
+            setNgWarning(`「${foundNg[0]}」という言葉が入っているみたい...。ポジティブな言葉でシェアしてみませんか？☕️✨`);
+            return;
+        }
+        setNgWarning(null);
+
         setIsSubmitting(true);
         try {
             // Firebase設定がない場合はデモモードとしてアラートを表示
@@ -41,6 +59,7 @@ export default function PostForm() {
                 setCoffeeName("");
                 setLocation("");
                 setFlavorText("");
+                setFlavorStamp(null);
                 setIsOpen(false);
                 return;
             }
@@ -50,6 +69,7 @@ export default function PostForm() {
                 coffeeName,
                 location,
                 flavorText,
+                flavorStamp,
                 likes: 0,
                 createdAt: serverTimestamp(),
             });
@@ -57,6 +77,7 @@ export default function PostForm() {
             setCoffeeName("");
             setLocation("");
             setFlavorText("");
+            setFlavorStamp(null);
             setIsOpen(false);
         } catch (error) {
             console.error("Error adding document: ", error);
@@ -140,6 +161,37 @@ export default function PostForm() {
                             />
                         </div>
                         <div style={{ marginBottom: "1rem" }}>
+                            <p style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "0.5rem" }}>味わいスタンプを添える 🏷️</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+                                {STAMPS.map((s) => (
+                                    <button
+                                        key={s.label}
+                                        type="button"
+                                        onClick={() => setFlavorStamp(flavorStamp === s.label ? null : s.label)}
+                                        style={{
+                                            padding: "0.6rem 0.4rem",
+                                            borderRadius: "0.6rem",
+                                            border: "2px solid",
+                                            borderColor: flavorStamp === s.label ? s.color : "rgba(255,255,255,0.1)",
+                                            backgroundColor: flavorStamp === s.label ? `${s.color}22` : "rgba(255,255,255,0.05)",
+                                            color: flavorStamp === s.label ? s.color : "var(--text-main)",
+                                            fontSize: "0.75rem",
+                                            fontWeight: "bold",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "0.3rem",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        <span>{s.icon}</span>
+                                        {s.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
                             <textarea
                                 placeholder="味わいや感想を教えて... (必須)"
                                 required
@@ -149,6 +201,19 @@ export default function PostForm() {
                                 style={{ ...inputStyle, resize: "none" }}
                             />
                         </div>
+                        {ngWarning && (
+                            <div style={{
+                                color: "#ff8da1",
+                                fontSize: "0.8rem",
+                                marginBottom: "1rem",
+                                padding: "0.5rem",
+                                background: "rgba(255, 141, 161, 0.1)",
+                                borderRadius: "0.5rem",
+                                border: "1px solid rgba(255, 141, 161, 0.3)"
+                            }}>
+                                {ngWarning}
+                            </div>
+                        )}
                         <button
                             type="submit"
                             disabled={isSubmitting}
