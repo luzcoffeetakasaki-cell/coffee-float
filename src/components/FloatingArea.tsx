@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
+import { getCurrentUserId } from "@/lib/auth";
 
 interface Post {
     id: string;
@@ -65,6 +66,11 @@ const MOCK_POSTS: Post[] = [
 export default function FloatingArea() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        getCurrentUserId().then(setCurrentUserId);
+    }, []);
 
     useEffect(() => {
         // Firebase設定が不完全な場合はデモ用データを表示
@@ -102,7 +108,13 @@ export default function FloatingArea() {
         <>
             <div className="floating-layer">
                 {posts.map((post, index) => (
-                    <Bubble key={post.id} post={post} index={index} onClick={() => setSelectedPost(post)} />
+                    <Bubble
+                        key={post.id}
+                        post={post}
+                        index={index}
+                        onClick={() => setSelectedPost(post)}
+                        isMine={currentUserId === post.userId}
+                    />
                 ))}
             </div>
             <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
@@ -110,7 +122,7 @@ export default function FloatingArea() {
     );
 }
 
-function Bubble({ post, index, onClick }: { post: Post; index: number; onClick: () => void }) {
+function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; onClick: () => void; isMine: boolean }) {
     // ランダムな位置とアニメーションの時間設定
     const [initialPos, setInitialPos] = useState<{ left: string; top: string } | null>(null);
     const [floatAnim, setFloatAnim] = useState<any>(null);
@@ -139,11 +151,15 @@ function Bubble({ post, index, onClick }: { post: Post; index: number; onClick: 
 
     return (
         <motion.div
-            className="bubble"
+            className={`bubble ${isMine ? "my-post" : ""}`}
             style={{
                 left: initialPos.left,
                 top: initialPos.top,
-                position: 'absolute'
+                position: 'absolute',
+                border: isMine ? "2px solid #C6A664" : "1px solid rgba(255,255,255,0.3)",
+                boxShadow: isMine ? "0 4px 20px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0,0,0,0.1)",
+                background: isMine ? "rgba(255, 255, 240, 0.95)" : "rgba(255, 255, 255, 0.9)",
+                zIndex: isMine ? 10 : 1
             }}
             animate={floatAnim}
             drag // ドラッグ可能にする
