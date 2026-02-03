@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, orderBy, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getLiffProfile, login } from "@/lib/liff";
+import { getCurrentUserId } from "@/lib/auth";
 
 interface Post {
     id: string;
@@ -28,13 +28,9 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
 
     useEffect(() => {
         const init = async () => {
-            const profile = await getLiffProfile();
-            if (profile?.userId) {
-                setUserId(profile.userId);
-            } else {
-                login(); // マイページを開くにはログインが必要
-                setLoading(false);
-            }
+            const id = await getCurrentUserId();
+            setUserId(id);
+            setLoading(false);
         };
         init();
     }, []);

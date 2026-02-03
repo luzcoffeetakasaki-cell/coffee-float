@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getLiffProfile, login } from "@/lib/liff";
+import { getCurrentUserId } from "@/lib/auth";
 import { checkNgWords } from "@/lib/filter";
 
 export default function PostForm() {
@@ -32,13 +32,8 @@ export default function PostForm() {
         }
 
         const fetchProfile = async () => {
-            const profile = await getLiffProfile();
-            if (profile?.userId) {
-                setUserId(profile.userId);
-            } else if (isOpen) {
-                // フォームを開いたタイミングで未ログインならログインを促す
-                login();
-            }
+            const id = await getCurrentUserId();
+            setUserId(id);
         };
         fetchProfile();
     }, [isOpen]);
