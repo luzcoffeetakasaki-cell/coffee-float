@@ -5,6 +5,7 @@ import FloatingArea from "@/components/FloatingArea";
 import PostForm from "@/components/PostForm";
 import Disclaimer from "@/components/Disclaimer";
 import MyPage from "@/components/MyPage";
+import LineOpenBanner from "@/components/LineOpenBanner";
 
 export default function Home() {
   const [showMyPage, setShowMyPage] = useState(false);
@@ -63,6 +64,7 @@ export default function Home() {
       <Disclaimer />
 
       {showMyPage && <MyPage onClose={() => setShowMyPage(false)} />}
+      <LineOpenBanner />
 
       {/* Background Decor */}
       <div style={{
