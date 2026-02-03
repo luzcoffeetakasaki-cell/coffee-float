@@ -185,6 +185,12 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                     <span style={{ fontSize: "1rem" }}>{stamp.icon}</span>{post.flavorStamp}
                 </div>
             )}
+            {/* Nickname Display */}
+            {post.nickname && (
+                <div style={{ fontSize: "0.75rem", color: "#6c5e53", marginBottom: "0.1rem", fontWeight: "bold" }}>
+                    @{post.nickname}
+                </div>
+            )}
             <div style={{ fontSize: "1rem", color: "#1a0f0a", marginBottom: "0.4rem", lineHeight: "1.3" }}>
                 <strong>{post.coffeeName}</strong>
             </div>
