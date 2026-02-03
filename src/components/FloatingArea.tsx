@@ -156,14 +156,18 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 left: initialPos.left,
                 top: initialPos.top,
                 position: 'absolute',
-                border: isMine ? "3px solid #C6A664" : "1px solid rgba(255,255,255,0.4)",
-                boxShadow: isMine ? "0 4px 25px rgba(198, 166, 100, 0.6)" : "0 4px 15px rgba(0,0,0,0.1)",
-                background: isMine ? "rgba(255, 250, 240, 0.98)" : "rgba(255, 255, 255, 0.92)",
+                border: isMine ? "1px solid #C6A664" : "1px solid rgba(255, 255, 255, 0.2)",
+                boxShadow: isMine ? "0 4px 20px rgba(198, 166, 100, 0.4)" : "0 4px 15px rgba(0, 0, 0, 0.1)",
+                background: isMine
+                    ? "linear-gradient(135deg, rgba(60, 40, 30, 0.95) 0%, rgba(30, 15, 10, 0.95) 100%)" // 自分: 濃厚なコーヒー色
+                    : "rgba(255, 255, 255, 0.1)", // 他人: 透過ガラス
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
                 zIndex: isMine ? 10 : 1,
                 padding: "1rem",
                 minWidth: "140px",
                 maxWidth: "200px",
-                color: "#2c1810", // ベースの文字色を濃い茶色に（背景白に対して高コントラスト）
+                color: "#f5ebe0", // 基本は白系（自分も他人も）
             }}
             animate={floatAnim}
             drag // ドラッグ可能にする
@@ -187,22 +191,33 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
             )}
             {/* Nickname Display */}
             {post.nickname && (
-                <div style={{ fontSize: "0.75rem", color: "#6c5e53", marginBottom: "0.1rem", fontWeight: "bold" }}>
+                <div style={{
+                    fontSize: "0.75rem",
+                    color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.7)",
+                    marginBottom: "0.1rem",
+                    fontWeight: "bold"
+                }}>
                     @{post.nickname}
                 </div>
             )}
-            <div style={{ fontSize: "1rem", color: "#1a0f0a", marginBottom: "0.4rem", lineHeight: "1.3" }}>
+            <div style={{
+                fontSize: "1rem",
+                color: isMine ? "#C6A664" : "#ffffff", // 自分はゴールド、他人は白
+                marginBottom: "0.4rem",
+                lineHeight: "1.3"
+            }}>
                 <strong>{post.coffeeName}</strong>
             </div>
             <div style={{
-                color: "#4a3b32", // 少しだけ淡いが十分濃い茶色
+                color: isMine ? "#f5ebe0" : "rgba(255, 255, 255, 0.9)", // 自分はクリーム、他人は白（透過なし）
                 fontSize: "0.85rem",
                 lineHeight: "1.5",
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                fontWeight: "500"
+                fontWeight: "500",
+                textShadow: isMine ? "none" : "0 1px 3px rgba(0,0,0,0.5)" // 他人は読みやすく影をつける
             }}>
                 {post.flavorText}
             </div>
