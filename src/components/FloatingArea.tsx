@@ -218,6 +218,18 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 }}>
                     {post.coffeeName}
                 </div>
+                {post.location && (
+                    <div style={{
+                        fontSize: "0.7rem",
+                        color: isMine ? "#8d7b68" : "rgba(255, 255, 255, 0.7)",
+                        marginTop: "0.1rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.1rem"
+                    }}>
+                        <span style={{ fontSize: "0.7rem" }}>📍</span> {post.location}
+                    </div>
+                )}
             </div>
         </motion.div>
     );
