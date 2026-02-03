@@ -9,7 +9,7 @@ const STAMPS: Record<string, { color: string; icon: string }> = {
     FLORAL: { color: "#B39DDB", icon: "🌸" },
 };
 
-export default function GET(request: Request) {
+export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
 
