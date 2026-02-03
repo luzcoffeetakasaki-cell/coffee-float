@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   description: "今、この瞬間の美味しいを共有する。コーヒーの感動共有アプリ。",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5, // ユーザーのズームは許可しつつ、自動ズーム後の復帰をスムーズにする
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

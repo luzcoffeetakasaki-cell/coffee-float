@@ -247,4 +247,5 @@ const inputStyle: React.CSSProperties = {
     color: "var(--text-main)",
     outline: "none",
     fontFamily: "inherit",
+    fontSize: "16px", // 16px以上にすることでiOSのフォーカス時ズームを防止
 };
