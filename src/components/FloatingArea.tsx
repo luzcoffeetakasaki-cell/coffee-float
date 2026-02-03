@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { getCurrentUserId } from "@/lib/auth";
 
 interface Post {
@@ -123,9 +123,13 @@ export default function FloatingArea() {
 }
 
 function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; onClick: () => void; isMine: boolean }) {
-    // ランダムな位置とアニメーションの時間設定
+    // ランダムな位置
     const [initialPos, setInitialPos] = useState<{ left: string; top: string } | null>(null);
     const [floatAnim, setFloatAnim] = useState<any>(null);
+
+    // 奥行きアニメーション用 (0: 奥, 1: 手前)
+    // 自分の投稿は常に少し手前寄りにして見つけやすくする
+    // const [depth, setDepth] = useState(isMine ? 0.8 : Math.random()); 
 
     useEffect(() => {
         // 初期位置 (画面端すぎないように)
@@ -143,6 +147,39 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 ease: "easeInOut",
             }
         });
+    }, []);
+
+    // 奥行きに基づいたスタイル計算
+    // depthは現在state管理だが、Framer Motionで滑らかに補間する
+    // バリエーション定義
+    const variants: Variants = {
+        far: {
+            scale: 0.7,
+            filter: "blur(2px)",
+            opacity: 0.8,
+            zIndex: 1,
+            transition: { duration: 8 + Math.random() * 5, ease: "easeInOut" }
+        },
+        near: {
+            scale: 1.1,
+            filter: "blur(0px)",
+            opacity: 1,
+            zIndex: 10,
+            transition: { duration: 8 + Math.random() * 5, ease: "easeInOut" }
+        }
+    };
+
+    // 現在の状態（ランダムに切り替える）
+    const [isNear, setIsNear] = useState(Math.random() > 0.5);
+
+    useEffect(() => {
+        const toggle = () => {
+            setIsNear(prev => !prev);
+            // 次の切り替えまでの時間をランダムに
+            setTimeout(toggle, 8000 + Math.random() * 8000);
+        };
+        const timer = setTimeout(toggle, Math.random() * 5000);
+        return () => clearTimeout(timer);
     }, []);
 
     const stamp = post.flavorStamp ? STAMPS[post.flavorStamp] : null;
@@ -163,64 +200,85 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                     : "rgba(255, 255, 255, 0.1)", // 他人: 透過ガラス
                 backdropFilter: "blur(8px)",
                 WebkitBackdropFilter: "blur(8px)",
-                zIndex: isMine ? 10 : 1,
+                // zIndex: isMine ? 10 : 1, // Controlled by variants now
                 padding: "1rem",
                 minWidth: "140px",
                 maxWidth: "200px",
                 color: "#f5ebe0", // 基本は白系（自分も他人も）
+                cursor: "pointer",
             }}
-            animate={floatAnim}
+            animate={floatAnim} // XYアニメーション
             drag // ドラッグ可能にする
             dragMomentum={false} // 離した時に慣性で飛ばないようにする
             whileHover={{ scale: 1.1, cursor: "grab" }}
             whileDrag={{ scale: 1.2, cursor: "grabbing" }}
             onClick={onClick}
         >
-            {stamp && (
+            {/* ここで2重motionにする */}
+            <motion.div
+                animate={isNear || isMine ? "near" : "far"} // 自分の投稿は常にNear(またはNear寄り)
+                variants={variants}
+                style={{ width: "100%", height: "100%" }}
+            >
+                {stamp && (
+                    <div style={{
+                        fontSize: "0.7rem",
+                        fontWeight: "bold",
+                        color: stamp.color,
+                        marginBottom: "0.2rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem"
+                    }}>
+                        <span style={{ fontSize: "1rem" }}>{stamp.icon}</span>{post.flavorStamp}
+                    </div>
+                )}
+                {/* Nickname Display */}
+                {post.nickname && (
+                    <div style={{
+                        fontSize: "0.75rem",
+                        color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.7)",
+                        marginBottom: "0.1rem",
+                        fontWeight: "bold"
+                    }}>
+                        @{post.nickname}
+                    </div>
+                )}
                 <div style={{
-                    fontSize: "0.7rem",
-                    fontWeight: "bold",
-                    color: stamp.color,
-                    marginBottom: "0.2rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.3rem"
+                    fontSize: "1rem",
+                    color: isMine ? "#C6A664" : "#ffffff", // 自分はゴールド、他人は白
+                    marginBottom: "0.4rem",
+                    lineHeight: "1.3"
                 }}>
-                    <span style={{ fontSize: "1rem" }}>{stamp.icon}</span>{post.flavorStamp}
+                    <strong>{post.coffeeName}</strong>
                 </div>
-            )}
-            {/* Nickname Display */}
-            {post.nickname && (
-                <div style={{
-                    fontSize: "0.75rem",
-                    color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.7)",
-                    marginBottom: "0.1rem",
-                    fontWeight: "bold"
-                }}>
-                    @{post.nickname}
-                </div>
-            )}
-            <div style={{
-                fontSize: "1rem",
-                color: isMine ? "#C6A664" : "#ffffff", // 自分はゴールド、他人は白
-                marginBottom: "0.4rem",
-                lineHeight: "1.3"
-            }}>
-                <strong>{post.coffeeName}</strong>
-            </div>
-            <div style={{
-                color: isMine ? "#f5ebe0" : "rgba(255, 255, 255, 0.9)", // 自分はクリーム、他人は白（透過なし）
-                fontSize: "0.85rem",
-                lineHeight: "1.5",
-                display: "-webkit-box",
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                fontWeight: "500",
-                textShadow: isMine ? "none" : "0 1px 3px rgba(0,0,0,0.5)" // 他人は読みやすく影をつける
-            }}>
-                {post.flavorText}
-            </div>
+                {/* コメント部分は Near の時だけ表示 (opacityアニメーション) */}
+                <motion.div
+                    animate={{
+                        opacity: (isNear || isMine) ? 1 : 0,
+                        height: (isNear || isMine) ? "auto" : 0,
+                        marginBottom: (isNear || isMine) ? "0" : "0" // 詰める
+                    }}
+                    transition={{ duration: 1 }}
+                    style={{
+                        color: isMine ? "#f5ebe0" : "rgba(255, 255, 255, 0.9)",
+                        fontSize: "0.85rem",
+                        lineHeight: "1.5",
+                        overflow: "hidden", // heightアニメーション用
+                        fontWeight: "500",
+                        textShadow: isMine ? "none" : "0 1px 3px rgba(0,0,0,0.5)"
+                    }}
+                >
+                    <div style={{ // 内部divでLineClamp
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                    }}>
+                        {post.flavorText}
+                    </div>
+                </motion.div>
+            </motion.div>
         </motion.div>
     );
 }
