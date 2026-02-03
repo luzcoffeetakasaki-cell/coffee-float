@@ -23,8 +23,30 @@ interface DetailModalProps {
     onClose: () => void;
 }
 
+const SHARE_BASE_URL = "https://coffee-float-x8lg.vercel.app/share";
+
 export default function DetailModal({ post, onClose }: DetailModalProps) {
     if (!post) return null;
+
+    const handleShare = async () => {
+        const shareUrl = `${SHARE_BASE_URL}/${post.id}`;
+        const shareText = `${post.coffeeName} - ${post.flavorText} #CoffeeFloat`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Coffee Float",
+                    text: shareText,
+                    url: shareUrl,
+                });
+            } catch (err) {
+                console.log("Share canceled");
+            }
+        } else {
+            navigator.clipboard.writeText(shareUrl);
+            alert("リンクをコピーしました！📋");
+        }
+    };
 
     const dateStr = post.createdAt?.toDate?.()
         ? post.createdAt.toDate().toLocaleString("ja-JP")
@@ -109,8 +131,49 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                     {post.flavorText}
                 </div>
 
-                <div style={{ textAlign: "right", opacity: 0.8 }}>
+                <div style={{ textAlign: "right", opacity: 0.8, marginBottom: "2rem" }}>
                     — {post.nickname}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
+                    <button
+                        onClick={handleShare}
+                        style={{
+                            padding: "0.8rem 2rem",
+                            borderRadius: "2rem",
+                            border: "none",
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                            color: "var(--text-main)",
+                            cursor: "pointer",
+                            fontSize: "1rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            transition: "background 0.2s"
+                        }}
+                    >
+                        📤 シェアする
+                    </button>
+                    {/* LINEで直接開くボタン (Optional) */}
+                    <a
+                        href={`https://line.me/R/msg/text/?${encodeURIComponent(`${post.coffeeName} #CoffeeFloat\n${SHARE_BASE_URL}/${post.id}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            padding: "0.8rem 2rem",
+                            borderRadius: "2rem",
+                            border: "none",
+                            backgroundColor: "#06C755", // LINE Green
+                            color: "white",
+                            textDecoration: "none",
+                            fontSize: "1rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                        }}
+                    >
+                        LINEで送る
+                    </a>
                 </div>
             </div>
         </div>
