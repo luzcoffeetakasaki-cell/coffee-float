@@ -80,6 +80,7 @@ export default function CoffeeLog() {
     const [loading, setLoading] = useState(true);
     const [nickname, setNickname] = useState("");
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [selectedBadge, setSelectedBadge] = useState<{ badge: Badge; isEarned: boolean } | null>(null);
     const [isEditingName, setIsEditingName] = useState(false);
 
     // Mood Rec States
@@ -640,11 +641,7 @@ export default function CoffeeLog() {
                                             textAlign: "center"
                                         }}
                                         onClick={() => {
-                                            if (isEarned) {
-                                                alert(`${badge.name}\n\n${badge.description}`);
-                                            } else {
-                                                alert(`獲得ヒント:\n${badge.hint}`);
-                                            }
+                                            setSelectedBadge({ badge, isEarned });
                                         }}
                                     >
                                         <div style={{
@@ -861,6 +858,147 @@ export default function CoffeeLog() {
                 </>
             )}
             <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+            <AnimatePresence>
+                {selectedBadge && (
+                    <BadgeModal
+                        badge={selectedBadge.badge}
+                        isEarned={selectedBadge.isEarned}
+                        onClose={() => setSelectedBadge(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
+    );
+}
+
+function BadgeModal({ badge, isEarned, onClose }: { badge: Badge; isEarned: boolean; onClose: () => void }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            style={{
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                backdropFilter: "blur(10px)",
+                zIndex: 2000,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "2rem"
+            }}
+        >
+            <motion.div
+                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    width: "100%",
+                    maxWidth: "320px",
+                    background: "linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)",
+                    borderRadius: "2rem",
+                    padding: "2.5rem 2rem",
+                    border: "1px solid rgba(198, 166, 100, 0.3)",
+                    textAlign: "center",
+                    position: "relative",
+                    boxShadow: isEarned ? "0 0 30px rgba(198, 166, 100, 0.2)" : "none"
+                }}
+            >
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: "absolute",
+                        top: "1rem",
+                        right: "1rem",
+                        background: "none",
+                        border: "none",
+                        color: "white",
+                        fontSize: "1.5rem",
+                        cursor: "pointer",
+                        opacity: 0.5
+                    }}
+                >
+                    ✕
+                </button>
+
+                {/* Icon Container */}
+                <div style={{
+                    width: "100px",
+                    height: "100px",
+                    borderRadius: "50%",
+                    background: isEarned
+                        ? "linear-gradient(135deg, rgba(198,166,100,0.3) 0%, rgba(198,166,100,0.1) 100%)"
+                        : "rgba(255,255,255,0.05)",
+                    border: isEarned
+                        ? "3px solid var(--accent-gold)"
+                        : "3px dashed rgba(255,255,255,0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "3rem",
+                    margin: "0 auto 1.5rem",
+                    filter: isEarned ? "none" : "grayscale(100%) blur(2px)",
+                    boxShadow: isEarned ? "0 10px 20px rgba(198,166,100,0.3)" : "none"
+                }}>
+                    {isEarned ? badge.icon : "？"}
+                </div>
+
+                {/* Badge Name */}
+                <h2 style={{
+                    fontSize: "1.4rem",
+                    color: isEarned ? "var(--accent-gold)" : "rgba(255,255,255,0.4)",
+                    marginBottom: "1rem",
+                    fontWeight: "bold"
+                }}>
+                    {isEarned ? badge.name : "SECRET BADGE"}
+                </h2>
+
+                {/* Description or Hint */}
+                <div style={{
+                    fontSize: "0.95rem",
+                    lineHeight: "1.6",
+                    color: "rgba(255,255,255,0.8)",
+                    padding: "1rem",
+                    background: "rgba(0,0,0,0.2)",
+                    borderRadius: "1rem",
+                    border: "1px solid rgba(255,255,255,0.05)"
+                }}>
+                    {isEarned ? (
+                        <>
+                            <div style={{ color: "var(--accent-gold)", fontSize: "0.75rem", fontWeight: "bold", marginBottom: "0.3rem" }}>UNLOCKED!</div>
+                            {badge.description}
+                        </>
+                    ) : (
+                        <>
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", fontWeight: "bold", marginBottom: "0.3rem" }}>HINT</div>
+                            {badge.hint}
+                        </>
+                    )}
+                </div>
+
+                {/* Action Button */}
+                <button
+                    onClick={onClose}
+                    style={{
+                        marginTop: "2rem",
+                        width: "100%",
+                        padding: "0.8rem",
+                        borderRadius: "2rem",
+                        border: "none",
+                        background: isEarned ? "var(--accent-gold)" : "rgba(255,255,255,0.1)",
+                        color: isEarned ? "black" : "white",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                    }}
+                >
+                    閉じる
+                </button>
+            </motion.div>
+        </motion.div>
     );
 }
