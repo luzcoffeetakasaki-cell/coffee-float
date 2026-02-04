@@ -10,6 +10,7 @@ import { usePWA } from "@/hooks/usePWA";
 import { motion, AnimatePresence } from "framer-motion";
 import DetailModal from "./DetailModal";
 import { BADGES, Badge } from "@/data/badges";
+import { getRecommendation, Recommendation } from "@/data/recommendations";
 
 interface Post {
     id: string;
@@ -60,15 +61,7 @@ const FLAVOR_KEYWORDS: Record<string, { category: string; keywords: string[]; ic
     ROASTY: { category: "ロースティー/ナッツ", keywords: ["香ばしい", "ナッツ", "スモーキー", "苦味", "アーモンド", "深み", "焙煎"], icon: "🌰", color: "#A67C52" },
 };
 
-const MOOD_REC_MAP: Record<string, { beans: string; roast: string; trait: string; advice: string; icon: string }> = {
-    "疲れた": { beans: "ブラジル・ショコラ", roast: "深煎り", trait: "チョコレートのような甘みと深いコク", advice: "頑張った自分を、どっしりとしたコクで包み込んで。ミルクをたっぷり入れても最高だよ！", icon: "🥱" },
-    "スッキリ": { beans: "エチオピア・イルガチェフェ", roast: "浅煎り", trait: "紅茶のような香りとレモンのような爽やかさ", advice: "澄み渡るような香りで、気分をリセット！アイスコーヒーにするとさらにクリアに。", icon: "✨" },
-    "集中したい": { beans: "ケニア", roast: "中深煎り", trait: "力強いボティとベリー系の鮮やかな酸味", advice: "キレのある酸味が脳をシャキッとさせてくれるはず。作業のお供にはブラックがおすすめ！", icon: "💻" },
-    "幸せ": { beans: "コスタリカ・ハニー", roast: "中煎り", trait: "ハチミツを思わせる優しい甘みと華やかな香り", advice: "今のマスターのハッピーな気分を、もっと甘く華やかに彩ってくれること間違いなし！", icon: "🥰" },
-    "リラックス": { beans: "グアテマラ", roast: "中煎り", trait: "チョコレートやナッツの香ばしさとバランスの良さ", advice: "お気に入りの音楽を聴きながら、ゆっくりと時間をかけて味わって。ホッと一息つけるよ。", icon: "🌿" },
-    "元気": { beans: "エチオピア（ナチュラル）", roast: "中煎り", trait: "熟したベリーのような濃密な香り", advice: "まるでストロベリーのような圧倒的な香り。個性を楽しみたい元気な午後にぴったりのエネルギー系！", icon: "🍓" },
-    "落ち着く": { beans: "ホンジュラス", roast: "中煎り", trait: "華やかで上品な香り", advice: "優しい酸味と甘みのバランスが、安らぎの時間にぴったり。優雅な気分に浸りたい時に。", icon: "🌸" },
-};
+const KW_DUMMY = ""; // Removed MOOD_REC_MAP
 
 export default function CoffeeLog() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -86,7 +79,7 @@ export default function CoffeeLog() {
 
     // Mood Rec States
     const [moodQuery, setMoodQuery] = useState("");
-    const [recommendation, setRecommendation] = useState<typeof MOOD_REC_MAP[keyof typeof MOOD_REC_MAP] | null>(null);
+    const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
     const [isAnalysing, setIsAnalysing] = useState(false);
     const [isNotifCollapsed, setIsNotifCollapsed] = useState(true);
     const isPWA = usePWA();
@@ -280,31 +273,10 @@ export default function CoffeeLog() {
         setRecommendation(null);
 
         // 抽出アニメーション用に少し待つ
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const query = moodQuery.toLowerCase();
-        let found = null;
-
-        // キーワードマッチング
-        for (const [key, details] of Object.entries(MOOD_REC_MAP)) {
-            if (query.includes(key)) {
-                found = details;
-                break;
-            }
-        }
-
-        // デフォルト（見つからない場合）
-        if (!found) {
-            found = {
-                beans: "コロンビア",
-                roast: "中煎り",
-                trait: "バランスの取れた味わいと華やかな香り",
-                advice: "何にでも合う万能な一杯。今のマスターの気分を優しく包み込んでくれるはずだよ。",
-                icon: "☕️"
-            };
-        }
-
-        setRecommendation(found);
+        const result = getRecommendation(moodQuery);
+        setRecommendation(result);
         setIsAnalysing(false);
     };
 
