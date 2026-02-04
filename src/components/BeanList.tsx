@@ -30,13 +30,18 @@ export default function BeanList() {
 
     useEffect(() => {
         const initUser = async () => {
-            const id = await getCurrentUserId();
-            setUserId(id);
+            try {
+                const id = await getCurrentUserId();
+                setUserId(id);
 
-            // データ移行（ゲストID -> LINE ID）のチェック
-            const storedGuestId = getStoredDeviceId();
-            if (id && !isGuestUserId(id) && storedGuestId && isGuestUserId(storedGuestId)) {
-                migrateGuestData(storedGuestId, id);
+                // データ移行（ゲストID -> LINE ID）のチェック
+                const storedGuestId = getStoredDeviceId();
+                if (id && !isGuestUserId(id) && storedGuestId && isGuestUserId(storedGuestId)) {
+                    migrateGuestData(storedGuestId, id);
+                }
+            } catch (e) {
+                console.error("User init failed in BeanList", e);
+                setLoading(false);
             }
         };
         initUser();
@@ -63,7 +68,13 @@ export default function BeanList() {
     };
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId) {
+            // userIdが確定して、かつnull（エラーなど）の場合はロード終了
+            if (userId === null && !loading) {
+                setLoading(false);
+            }
+            return;
+        }
 
         const q = query(
             collection(db, "beans"),
@@ -81,7 +92,6 @@ export default function BeanList() {
         }, (error) => {
             console.error("Bean listener failed:", error);
             setLoading(false);
-            // インデックス不足の可能性などを考慮してエラーを出す
             if (error.code === "failed-precondition") {
                 console.warn("Firestore index might be missing for beans collection.");
             }
@@ -127,11 +137,6 @@ export default function BeanList() {
     const calculateDaysSinceRoast = (dateStr: string) => {
         const roast = new Date(dateStr);
         const today = new Date();
-        const diffTime = Math.abs(today.getTime() - roast.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        // Note: This is simple diff. If roast date is today, it might show 0 or 1 depending on time.
-        // Let's make it intuitive: Roast Date = Start of day. Today = Current time.
-        // Actually, simple day diff:
         const oneDay = 24 * 60 * 60 * 1000;
         const roastDateOnly = new Date(roast.getFullYear(), roast.getMonth(), roast.getDate());
         const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -164,7 +169,8 @@ export default function BeanList() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        boxShadow: "0 4px 10px rgba(198, 166, 100, 0.4)"
+                        boxShadow: "0 4px 10px rgba(198, 166, 100, 0.4)",
+                        zIndex: 10
                     }}
                 >
                     {isAdding ? "×" : "＋"}

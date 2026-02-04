@@ -6,6 +6,12 @@ export const liffReady = new Promise<boolean>((resolve) => {
 });
 
 export const initLiff = async (liffId: string) => {
+    if (!liffId) {
+        console.warn("LIFF ID is empty. Skipping initialization.");
+        resolveInit(false);
+        return;
+    }
+
     try {
         await liff.init({ liffId });
         console.log("LIFF init success");
