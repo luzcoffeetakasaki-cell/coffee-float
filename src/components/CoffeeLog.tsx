@@ -7,6 +7,7 @@ import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { login } from "@/lib/liff";
 import { writeBatch, getDocs } from "firebase/firestore";
 import { usePWA } from "@/hooks/usePWA";
+import { motion } from "framer-motion";
 
 interface Post {
     id: string;
@@ -330,7 +331,7 @@ export default function CoffeeLog() {
                         </section>
                     )}
 
-                    {/* コーヒーカルテ（分析） */}
+                    {/* コーヒーカルテ（高度な分析） */}
                     <section style={{
                         background: "rgba(255,255,255,0.05)",
                         padding: "1.5rem",
@@ -338,21 +339,76 @@ export default function CoffeeLog() {
                         marginBottom: "2rem",
                         border: "1px solid var(--glass-border)"
                     }}>
-                        <h3 style={{ fontSize: "1rem", marginBottom: "1rem", opacity: 0.8 }}>味わい分析結果 🧠</h3>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem" }}>
+                            <h3 style={{ fontSize: "1rem", opacity: 0.8 }}>Taste Radar 🧠 Analysis</h3>
+                            <span style={{ fontSize: "0.75rem", background: "var(--accent-gold)", color: "#1e0f0a", padding: "0.2rem 0.6rem", borderRadius: "1rem", fontWeight: "bold" }}>
+                                {posts.length} Logs Analyzed
+                            </span>
+                        </div>
+
                         {topStamp ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                                <div style={{ fontSize: "3rem" }}>{STAMPS[topStamp].icon}</div>
-                                <div>
-                                    <p style={{ fontWeight: "bold", color: STAMPS[topStamp].color, fontSize: "1.1rem" }}>
-                                        あなたは「{topStamp}」派ですね！
-                                    </p>
-                                    <p style={{ fontSize: "0.9rem", marginTop: "0.5rem", lineHeight: "1.5" }}>
+                            <div>
+                                {/* 味覚チャート */}
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "2rem" }}>
+                                    {Object.entries(STAMPS).map(([key, info]) => {
+                                        const count = stats[key] || 0;
+                                        const percent = posts.length > 0 ? (count / posts.length) * 100 : 0;
+                                        return (
+                                            <div key={key}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "0.3rem" }}>
+                                                    <span>{info.icon} {key}</span>
+                                                    <span style={{ opacity: 0.7 }}>{Math.round(percent)}%</span>
+                                                </div>
+                                                <div style={{ height: "6px", background: "rgba(255,255,255,0.1)", borderRadius: "3px", overflow: "hidden" }}>
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${percent}%` }}
+                                                        transition={{ duration: 1, ease: "easeOut" }}
+                                                        style={{ height: "100%", background: info.color }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div style={{
+                                    padding: "1.2rem",
+                                    background: "rgba(198, 166, 100, 0.1)",
+                                    borderRadius: "1rem",
+                                    border: "1px solid rgba(198, 166, 100, 0.2)"
+                                }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.8rem" }}>
+                                        <div style={{ fontSize: "2rem" }}>{STAMPS[topStamp].icon}</div>
+                                        <div>
+                                            <p style={{ fontWeight: "bold", color: STAMPS[topStamp].color, fontSize: "1rem" }}>
+                                                {topStamp} Profile Detected
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: "0.85rem", lineHeight: "1.6", opacity: 0.9 }}>
                                         {STAMPS[topStamp].message}
                                     </p>
+
+                                    <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px dashed rgba(198, 166, 100, 0.3)" }}>
+                                        <h4 style={{ fontSize: "0.8rem", color: "var(--accent-gold)", marginBottom: "0.5rem" }}>💡 あなたにおすすめの傾向</h4>
+                                        <p style={{ fontSize: "0.8rem", opacity: 0.8, lineHeight: "1.5" }}>
+                                            {topStamp === "FRUITY" || topStamp === "JUICY" ?
+                                                "浅煎りのエチオピアやケニアがおすすめ！ワインのような芳醇な香りを楽しめるはず。" :
+                                                topStamp === "BITTER" ?
+                                                    "深煎りのブラジルやマンデリンが相性抜群。しっかりとしたボディとコクを堪能してみて。" :
+                                                    topStamp === "SWEET" ?
+                                                        "中煎りのコロンビアやグアテマラがぴったり。キャラメルのような甘みを感じてみて。" :
+                                                        "ゲイシャ種やウォッシュド精製の豆を探してみて。驚くほどクリーンで華やかな体験が待っています。"
+                                            }
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
-                            <p style={{ fontSize: "0.9rem" }}>まだ投稿がありません。コーヒーの思い出をシェアして、あなたの好みを分析しましょう！</p>
+                            <p style={{ fontSize: "0.9rem", textAlign: "center", padding: "1rem", opacity: 0.6 }}>
+                                まだ十分なデータがありません。<br />ログを増やして、あなたの「味覚の地図」を完成させましょう！
+                            </p>
                         )}
                     </section>
 
