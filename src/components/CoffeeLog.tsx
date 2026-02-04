@@ -9,6 +9,7 @@ import { writeBatch, getDocs } from "firebase/firestore";
 import { usePWA } from "@/hooks/usePWA";
 import { motion, AnimatePresence } from "framer-motion";
 import DetailModal from "./DetailModal";
+import { BADGES, Badge } from "@/data/badges";
 
 interface Post {
     id: string;
@@ -21,6 +22,17 @@ interface Post {
     isFavorite?: boolean;
     aging?: number | null;
     likes: number;
+    createdAt: Timestamp;
+}
+
+interface Bean {
+    id: string;
+    name: string;
+    shopName?: string;
+    origin?: string;
+    process?: string;
+    roastDate: string;
+    notes?: string;
     createdAt: Timestamp;
 }
 
@@ -63,6 +75,8 @@ export default function CoffeeLog() {
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
     const [keywordStats, setKeywordStats] = useState<Record<string, number>>({});
+    const [beans, setBeans] = useState<Bean[]>([]);
+    const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [nickname, setNickname] = useState("");
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -197,6 +211,34 @@ export default function CoffeeLog() {
 
         return () => unsubscribe();
     }, [userId]);
+
+    // 豆リストの取得（バッジ計算用）
+    useEffect(() => {
+        if (!userId) return;
+
+        const q = query(
+            collection(db, "beans"),
+            where("userId", "==", userId)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const newBeans = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Bean[];
+            setBeans(newBeans);
+        });
+
+        return () => unsubscribe();
+    }, [userId]);
+
+    // バッジの計算
+    useEffect(() => {
+        const earned = BADGES
+            .filter(badge => badge.condition({ posts, beans }))
+            .map(badge => badge.id);
+        setEarnedBadges(earned);
+    }, [posts, beans]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -558,6 +600,86 @@ export default function CoffeeLog() {
                                     </motion.div>
                                 ) : null}
                             </AnimatePresence>
+                        </div>
+                    </section>
+
+                    {/* Badge Collection Section */}
+                    <section style={{
+                        background: "rgba(255,255,255,0.05)",
+                        padding: "1.5rem",
+                        borderRadius: "1.5rem",
+                        marginBottom: "2rem",
+                        border: "1px solid var(--glass-border)"
+                    }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                            <h3 style={{ fontSize: "1rem", opacity: 0.8 }}>Badge Collection 🏅</h3>
+                            <span style={{ fontSize: "0.75rem", background: "var(--accent-gold)", color: "#1e0f0a", padding: "0.2rem 0.6rem", borderRadius: "1rem", fontWeight: "bold" }}>
+                                {earnedBadges.length} / {BADGES.length}
+                            </span>
+                        </div>
+
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))",
+                            gap: "1rem",
+                            justifyItems: "center"
+                        }}>
+                            {BADGES.map((badge) => {
+                                const isEarned = earnedBadges.includes(badge.id);
+                                return (
+                                    <motion.div
+                                        key={badge.id}
+                                        whileHover={isEarned ? { scale: 1.1 } : {}}
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            gap: "0.5rem",
+                                            cursor: isEarned ? "pointer" : "default",
+                                            opacity: isEarned ? 1 : 0.4,
+                                            textAlign: "center"
+                                        }}
+                                        onClick={() => {
+                                            if (isEarned) {
+                                                alert(`${badge.name}\n\n${badge.description}`);
+                                            } else {
+                                                alert(`獲得ヒント:\n${badge.hint}`);
+                                            }
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: "56px",
+                                            height: "56px",
+                                            borderRadius: "50%",
+                                            background: isEarned
+                                                ? "linear-gradient(135deg, rgba(198,166,100,0.3) 0%, rgba(198,166,100,0.1) 100%)"
+                                                : "rgba(255,255,255,0.05)",
+                                            border: isEarned
+                                                ? "2px solid var(--accent-gold)"
+                                                : "2px dashed rgba(255,255,255,0.1)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: "1.8rem",
+                                            filter: isEarned ? "none" : "grayscale(100%) blur(1px)",
+                                            boxShadow: isEarned ? "0 0 15px rgba(198,166,100,0.2)" : "none"
+                                        }}>
+                                            {isEarned ? badge.icon : "？"}
+                                        </div>
+                                        <div style={{
+                                            fontSize: "0.6rem",
+                                            fontWeight: "bold",
+                                            color: isEarned ? "var(--accent-gold)" : "rgba(255,255,255,0.4)",
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            maxWidth: "100%"
+                                        }}>
+                                            {isEarned ? badge.name : "Locked"}
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
                     </section>
 
