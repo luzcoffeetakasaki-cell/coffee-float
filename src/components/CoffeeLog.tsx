@@ -41,9 +41,12 @@ interface Bean {
 
 interface Notification {
     id: string;
-    postId: string;
-    coffeeName: string;
-    senderNickname: string;
+    type?: 'cheers' | 'badge'; // Default to cheers for backward compatibility
+    postId?: string;
+    coffeeName?: string;
+    senderNickname?: string;
+    badgeName?: string; // For badge notifications
+    badgeIcon?: string; // For badge notifications
     read: boolean;
     createdAt: Timestamp;
 }
@@ -67,6 +70,7 @@ const KW_DUMMY = ""; // Removed MOOD_REC_MAP
 export default function CoffeeLog() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [localNotifications, setLocalNotifications] = useState<Notification[]>([]); // For client-side events like badges
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
     const [keywordStats, setKeywordStats] = useState<Record<string, number>>({});
@@ -230,17 +234,58 @@ export default function CoffeeLog() {
     }, [userId]);
 
     // バッジの計算
+    // バッジの計算と通知
     useEffect(() => {
         const earned = BADGES
             .filter(badge => badge.condition({ posts, beans }))
             .map(badge => badge.id);
+
         setEarnedBadges(earned);
+
+        // 新規獲得バッジのチェック
+        const seenBadgesJson = localStorage.getItem("coffee_float_seen_badges");
+        const seenBadges = seenBadgesJson ? JSON.parse(seenBadgesJson) : [];
+        const newBadges = earned.filter(id => !seenBadges.includes(id));
+
+        if (newBadges.length > 0) {
+            const newLocalNotifs: Notification[] = newBadges.map(id => {
+                const badge = BADGES.find(b => b.id === id);
+                return {
+                    id: `badge_${id}_${Date.now()}`,
+                    type: 'badge',
+                    badgeName: badge?.name || "Unknown Badge",
+                    badgeIcon: badge?.icon || "🏅",
+                    read: false,
+                    createdAt: Timestamp.now()
+                };
+            });
+
+            setLocalNotifications(prev => [...newLocalNotifs, ...prev]);
+
+            // 保存
+            const updatedSeen = Array.from(new Set([...seenBadges, ...newBadges]));
+            localStorage.setItem("coffee_float_seen_badges", JSON.stringify(updatedSeen));
+        }
     }, [posts, beans]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // Firestoreからの通知とローカル通知をマージしてソート
+    const allNotifications = [...localNotifications, ...notifications].sort((a, b) => {
+        const timeA = a.createdAt?.toMillis?.() || 0;
+        const timeB = b.createdAt?.toMillis?.() || 0;
+        return timeB - timeA;
+    });
+
+    const unreadCount = allNotifications.filter(n => !n.read).length;
 
     const markAsRead = async (notificationId: string) => {
         try {
+            // Local check
+            const localTarget = localNotifications.find(n => n.id === notificationId);
+            if (localTarget) {
+                setLocalNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+                return;
+            }
+
             const batch = writeBatch(db);
             const ref = doc(db, "notifications", notificationId);
             batch.update(ref, { read: true });
@@ -252,6 +297,9 @@ export default function CoffeeLog() {
 
     const markAllAsRead = async () => {
         try {
+            // Mark locals as read
+            setLocalNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
             const batch = writeBatch(db);
             notifications.forEach((n) => {
                 if (!n.read) { // Only mark unread ones
@@ -420,10 +468,10 @@ export default function CoffeeLog() {
                                         style={{ overflow: "hidden" }}
                                     >
                                         <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                                            {notifications.length === 0 ? (
+                                            {allNotifications.length === 0 ? (
                                                 <p style={{ fontSize: "0.85rem", opacity: 0.5, textAlign: "center", padding: "1rem" }}>まだ通知はありません</p>
                                             ) : (
-                                                notifications.map((n) => (
+                                                allNotifications.map((n) => (
                                                     <div key={n.id} style={{
                                                         padding: "0.8rem",
                                                         background: n.read ? "rgba(255,255,255,0.03)" : "rgba(198, 166, 100, 0.1)",
@@ -436,7 +484,15 @@ export default function CoffeeLog() {
                                                         position: "relative"
                                                     }}>
                                                         <div style={{ paddingRight: "0.5rem" }}>
-                                                            🥂 {n.senderNickname}さんがあなたの「{n.coffeeName}」に乾杯しました！
+                                                            {n.type === 'badge' ? (
+                                                                <>
+                                                                    🎉 バッジ「{n.badgeName}」を獲得しました！
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    🥂 {n.senderNickname}さんがあなたの「{n.coffeeName}」に乾杯しました！
+                                                                </>
+                                                            )}
                                                             {!n.read && <span style={{ marginLeft: "0.5rem", color: "var(--accent-gold)", fontSize: "0.7rem" }}>●</span>}
                                                             <p style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.2rem" }}>
                                                                 {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString("ja-JP") : "たった今"}
@@ -1011,10 +1067,42 @@ function BadgeModal({ badge, isEarned, onClose }: { badge: Badge; isEarned: bool
                 </div>
 
                 {/* Action Button */}
+                {isEarned && (
+                    <button
+                        onClick={() => {
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: 'Coffee Float Badge',
+                                    text: `Coffee Floatでバッジ「${badge.name}」を獲得しました！🏅\n${badge.description}`,
+                                    url: window.location.href
+                                }).catch(console.error);
+                            } else {
+                                alert("ご利用のブラウザはシェア機能に対応していません");
+                            }
+                        }}
+                        style={{
+                            marginBottom: "1rem", // Add space between buttons
+                            width: "100%",
+                            padding: "0.8rem",
+                            borderRadius: "2rem",
+                            border: "1px solid var(--accent-gold)",
+                            background: "rgba(198, 166, 100, 0.1)",
+                            color: "var(--accent-gold)",
+                            fontWeight: "bold",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "0.5rem"
+                        }}
+                    >
+                        📤 シェアして自慢する
+                    </button>
+                )}
+
                 <button
                     onClick={onClose}
                     style={{
-                        marginTop: "2rem",
                         width: "100%",
                         padding: "0.8rem",
                         borderRadius: "2rem",
