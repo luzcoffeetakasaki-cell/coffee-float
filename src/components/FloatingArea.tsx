@@ -352,14 +352,15 @@ function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { pos
                 WebkitBackdropFilter: "blur(5px)",
                 zIndex: isMine ? 100 : 10, // 自分の投稿を少し優先
 
-                borderRadius: isTrivia ? "12px" : "50px", // Triviaは少し角ばらせる
-                padding: "0.5rem 1rem",
-                width: "auto",
-                maxWidth: "240px",
-                height: "auto",
+                borderRadius: isTrivia ? "50%" : "50px", // 雑学は完全な円形
+                padding: isTrivia ? "0" : "0.5rem 1rem",
+                width: isTrivia ? "60px" : "auto",
+                height: isTrivia ? "60px" : "auto",
+                aspectRatio: isTrivia ? "1/1" : "auto",
 
                 display: "flex",
                 alignItems: "center",
+                justifyContent: isTrivia ? "center" : "flex-start",
                 gap: "0.8rem",
                 cursor: "pointer",
             }}
@@ -370,79 +371,80 @@ function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { pos
             whileDrag={{ scale: 1.1, cursor: "grabbing", zIndex: 200 }}
             onClick={onClick}
         >
-            {/* スタンプ（アイコン） */}
-            {stamp && (
-                <div style={{
-                    fontSize: "1.2rem",
-                    filter: isMine ? "none" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-                }}>
-                    {stamp.icon}
-                </div>
-            )}
-
-            {/* テキスト情報（縦並び） */}
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <div style={{
-                    fontSize: "0.9rem",
-                    color: isMine || isTrivia ? "#C6A664" : "#ffffff",
-                    lineHeight: "1.2",
-                    whiteSpace: "nowrap",
-                    fontWeight: "bold",
-                    marginBottom: "0.1rem",
-                    textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    maxWidth: "150px" // コーヒー名の幅制限
-                }}>
-                    {post.coffeeName}
-                </div>
-
-                {isTrivia && (
-                    <div style={{ fontSize: "0.7rem", color: "rgba(255, 255, 255, 0.9)", maxWidth: "180px", lineHeight: "1.2", marginTop: "0.2rem" }}>
-                        {post.flavorText.length > 20 ? post.flavorText.substring(0, 20) + "..." : post.flavorText}
-                    </div>
-                )}
-
-                {/* Footer: Nickname & Location */}
-                <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.3rem",
-                    fontSize: "0.65rem",
-                    opacity: 0.9
-                }}>
-                    {post.nickname && (
+            {isTrivia ? (
+                /* 雑学：アイコンのみ表示 */
+                <div style={{ fontSize: "1.5rem" }}>💡</div>
+            ) : (
+                <>
+                    {/* スタンプ（アイコン） */}
+                    {stamp && (
                         <div style={{
-                            color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.8)",
-                            fontWeight: "bold",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: "70px" // ニックネームの幅制限
+                            fontSize: "1.2rem",
+                            filter: isMine ? "none" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
                         }}>
-                            {post.nickname}
+                            {stamp.icon}
                         </div>
                     )}
-                    {post.nickname && post.location && (
-                        <span style={{ color: isMine ? "#a69b95" : "rgba(255,255,255,0.4)" }}>|</span>
-                    )}
-                    {post.location && (
+
+                    {/* テキスト情報（縦並び） */}
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                         <div style={{
-                            color: isMine ? "#8d7b68" : "rgba(255, 255, 255, 0.7)",
+                            fontSize: "0.9rem",
+                            color: isMine ? "#C6A664" : "#ffffff",
+                            lineHeight: "1.2",
                             whiteSpace: "nowrap",
+                            fontWeight: "bold",
+                            marginBottom: "0.1rem",
+                            textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "150px" // コーヒー名の幅制限
+                        }}>
+                            {post.coffeeName}
+                        </div>
+
+                        {/* Footer: Nickname & Location */}
+                        <div style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "0.1rem",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: "70px" // 場所の幅制限
+                            gap: "0.3rem",
+                            fontSize: "0.65rem",
+                            opacity: 0.9
                         }}>
-                            <span style={{ fontSize: "0.6rem" }}>📍</span>
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{post.location}</span>
+                            {post.nickname && (
+                                <div style={{
+                                    color: isMine ? "#d4c1aa" : "rgba(255, 255, 255, 0.8)",
+                                    fontWeight: "bold",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    maxWidth: "70px" // ニックネームの幅制限
+                                }}>
+                                    {post.nickname}
+                                </div>
+                            )}
+                            {post.nickname && post.location && (
+                                <span style={{ color: isMine ? "#a69b95" : "rgba(255,255,255,0.4)" }}>|</span>
+                            )}
+                            {post.location && (
+                                <div style={{
+                                    color: isMine ? "#8d7b68" : "rgba(255, 255, 255, 0.7)",
+                                    whiteSpace: "nowrap",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.1rem",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    maxWidth: "70px" // 場所の幅制限
+                                }}>
+                                    <span style={{ fontSize: "0.6rem" }}>📍</span>
+                                    <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{post.location}</span>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
-            </div>
+                    </div>
+                </>
+            )}
         </motion.div>
     );
 }
