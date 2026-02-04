@@ -47,67 +47,14 @@ const FLAVOR_KEYWORDS: Record<string, { category: string; keywords: string[]; ic
     ROASTY: { category: "ロースティー/ナッツ", keywords: ["香ばしい", "ナッツ", "スモーキー", "苦味", "アーモンド", "深み", "焙煎"], icon: "🌰", color: "#A67C52" },
 };
 
-const DIAGNOSTIC_TREE: any = {
-    start: {
-        question: "どんな気分になるコーヒーを選びたい？",
-        options: [
-            { label: "落ち着く 🌿", next: "relax_q1" },
-            { label: "元気になる ⚡", next: "active_q1" }
-        ]
-    },
-    relax_q1: {
-        question: "穏やかな味が好き？",
-        options: [
-            { label: "穏やかがいい", next: "relax_q2_mild" },
-            { label: "力強い方がいい", next: "relax_q2_strong" }
-        ]
-    },
-    active_q1: {
-        question: "果実味は強い方がいい？",
-        options: [
-            { label: "穏やかがいい", next: "active_q2_mild" },
-            { label: "強い方がいい", next: "active_q2_strong" }
-        ]
-    },
-    relax_q2_mild: {
-        question: "どっちがすき？",
-        options: [
-            { label: "華やか系", result: "honduras" },
-            { label: "甘さしっかり系", result: "guatemala" }
-        ]
-    },
-    relax_q2_strong: {
-        question: "果実味は好き？",
-        options: [
-            { label: "苦手", result: "brazil" },
-            { label: "好き", result: "colombia" }
-        ]
-    },
-    active_q2_mild: {
-        question: "軽い味わいが好き？",
-        options: [
-            { label: "軽い方が好き", result: "ethiopia_washed" },
-            { label: "軽すぎない方がいい", result: "rwanda" }
-        ]
-    },
-    active_q2_strong: {
-        question: "シトラス系とベリー系どっちの香りが好き？",
-        options: [
-            { label: "シトラス", result: "kenya" },
-            { label: "ベリー", result: "ethiopia_natural" }
-        ]
-    }
-};
-
-const BEANS_DATA: any = {
-    honduras: { name: "ホンジュラス", trait: "華やかで上品な香り", advice: "優しい酸味と甘みのバランスが、安らぎの時間にぴったり。優雅な気分に浸りたい時に。", icon: "🌸" },
-    guatemala: { name: "グアテマラ", trait: "豊かな甘みと華やかな後味", advice: "チョコレートのような甘さと、花のような香りが共存する一杯。ほっと落ち着きたいマスターに。", icon: "🍫" },
-    brazil: { name: "ブラジル", trait: "香ばしさとどっしりしたコク", advice: "酸味が苦手な方にもおすすめ。ナッツのような高い香りと、落ち着いた苦味が心地よいです。", icon: "🌰" },
-    colombia: { name: "コロンビア", trait: "フルーティーな甘みとコク", advice: "しっかりとした飲みごたえがありつつ、どこか果実のような甘さを感じる安定の一杯。", icon: "🍒" },
-    ethiopia_washed: { name: "エチオピア（ウォッシュド）", trait: "レモンのような爽やかさと軽い口当たり", advice: "非常にクリーンな味わいで、気分をシャキッとリフレッシュさせてくれます。朝の一杯に。", icon: "🍋" },
-    rwanda: { name: "ルワンダ", trait: "程よいボディ感とクリアな甘み", advice: "軽すぎず重すぎない、絶妙なバランス。透明感のある甘さと爽やかな香りが元気を与えてくれます。", icon: "✨" },
-    kenya: { name: "ケニア", trait: "力強い酸味と重厚なベリー感", advice: "「グレープフルーツ」を思わせる鮮やかな酸味が特徴。エネルギーをチャージしたい時に最適！", icon: "🍷" },
-    ethiopia_natural: { name: "エチオピア（ナチュラル）", trait: "熟したベリーのような濃密な香り", advice: "まるでジャムやストロベリーのような圧倒的な香り。個性を楽しみたい元気な午後に。", icon: "🍓" }
+const MOOD_REC_MAP: Record<string, { beans: string; roast: string; trait: string; advice: string; icon: string }> = {
+    "疲れた": { beans: "ブラジル・ショコラ", roast: "深煎り", trait: "チョコレートのような甘みと深いコク", advice: "頑張った自分を、どっしりとしたコクで包み込んで。ミルクをたっぷり入れても最高だよ！", icon: "🥱" },
+    "スッキリ": { beans: "エチオピア・イルガチェフェ", roast: "浅煎り", trait: "紅茶のような香りとレモンのような爽やかさ", advice: "澄み渡るような香りで、気分をリセット！アイスコーヒーにするとさらにクリアに。", icon: "✨" },
+    "集中したい": { beans: "ケニア", roast: "中深煎り", trait: "力強いボティとベリー系の鮮やかな酸味", advice: "キレのある酸味が脳をシャキッとさせてくれるはず。作業のお供にはブラックがおすすめ！", icon: "💻" },
+    "幸せ": { beans: "コスタリカ・ハニー", roast: "中煎り", trait: "ハチミツを思わせる優しい甘みと華やかな香り", advice: "今のマスターのハッピーな気分を、もっと甘く華やかに彩ってくれること間違いなし！", icon: "🥰" },
+    "リラックス": { beans: "グアテマラ", roast: "中煎り", trait: "チョコレートやナッツの香ばしさとバランスの良さ", advice: "お気に入りの音楽を聴きながら、ゆっくりと時間をかけて味わって。ホッと一息つけるよ。", icon: "🌿" },
+    "元気": { beans: "エチオピア（ナチュラル）", roast: "中煎り", trait: "熟したベリーのような濃密な香り", advice: "まるでストロベリーのような圧倒的な香り。個性を楽しみたい元気な午後にぴったりのエネルギー系！", icon: "🍓" },
+    "落ち着く": { beans: "ホンジュラス", roast: "中煎り", trait: "華やかで上品な香り", advice: "優しい酸味と甘みのバランスが、安らぎの時間にぴったり。優雅な気分に浸りたい時に。", icon: "🌸" },
 };
 
 export default function CoffeeLog() {
@@ -121,9 +68,10 @@ export default function CoffeeLog() {
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [isEditingName, setIsEditingName] = useState(false);
 
-    // Diagnostic States
-    const [diagStep, setDiagStep] = useState("start");
-    const [diagResult, setDiagResult] = useState<any>(null);
+    // Mood Rec States
+    const [moodQuery, setMoodQuery] = useState("");
+    const [recommendation, setRecommendation] = useState<typeof MOOD_REC_MAP[keyof typeof MOOD_REC_MAP] | null>(null);
+    const [isAnalysing, setIsAnalysing] = useState(false);
     const isPWA = usePWA();
 
     useEffect(() => {
@@ -279,18 +227,40 @@ export default function CoffeeLog() {
 
     const topStamp = Object.entries(stats).sort((a, b) => b[1] - a[1])[0]?.[0];
 
-    const handleDiagnosticSelect = (option: any) => {
-        if (option.result) {
-            setDiagResult(BEANS_DATA[option.result]);
-            setDiagStep("result");
-        } else {
-            setDiagStep(option.next);
-        }
-    };
+    const handleGetRecommendation = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!moodQuery.trim()) return;
 
-    const resetDiagnostic = () => {
-        setDiagStep("start");
-        setDiagResult(null);
+        setIsAnalysing(true);
+        setRecommendation(null);
+
+        // 抽出アニメーション用に少し待つ
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const query = moodQuery.toLowerCase();
+        let found = null;
+
+        // キーワードマッチング
+        for (const [key, details] of Object.entries(MOOD_REC_MAP)) {
+            if (query.includes(key)) {
+                found = details;
+                break;
+            }
+        }
+
+        // デフォルト（見つからない場合）
+        if (!found) {
+            found = {
+                beans: "コロンビア",
+                roast: "中煎り",
+                trait: "バランスの取れた味わいと華やかな香り",
+                advice: "何にでも合う万能な一杯。今のマスターの気分を優しく包み込んでくれるはずだよ。",
+                icon: "☕️"
+            };
+        }
+
+        setRecommendation(found);
+        setIsAnalysing(false);
     };
 
     return (
@@ -469,99 +439,91 @@ export default function CoffeeLog() {
                         </div>
                     </section>
 
-                    {/* 診断セクション */}
-                    <section style={{ marginBottom: "3.5rem" }}>
+                    {/* ムード・ペアリングセクション */}
+                    <section style={{ marginBottom: "2rem" }}>
                         <div className="glass-panel" style={{
                             padding: "1.5rem",
                             borderRadius: "1.5rem",
                             background: "linear-gradient(135deg, rgba(198, 166, 100, 0.1) 0%, rgba(30, 20, 15, 0.4) 100%)",
-                            border: "1px solid rgba(198, 166, 100, 0.2)",
-                            overflow: "hidden"
+                            border: "1px solid rgba(198, 166, 100, 0.2)"
                         }}>
-                            <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem", color: "var(--accent-gold)" }}>Coffee Diagnostic ☕️✨</h3>
-                            <p style={{ fontSize: "0.8rem", opacity: 0.7, marginBottom: "1.5rem" }}>チャートに沿って、今のマスターにぴったりの豆を導き出します。</p>
+                            <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem", color: "var(--accent-gold)" }}>Mood Pairing 🧠💭</h3>
+                            <p style={{ fontSize: "0.8rem", opacity: 0.7, marginBottom: "1.2rem" }}>今の気分にぴったりの一杯を提案するよ。</p>
+
+                            <form onSubmit={handleGetRecommendation} style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                                <input
+                                    placeholder="例: スッキリしたい、疲れた..."
+                                    value={moodQuery}
+                                    onChange={(e) => setMoodQuery(e.target.value)}
+                                    style={{
+                                        flex: 1,
+                                        padding: "0.8rem 1rem",
+                                        borderRadius: "0.8rem",
+                                        background: "rgba(0,0,0,0.3)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        color: "white",
+                                        fontSize: "0.9rem",
+                                        outline: "none"
+                                    }}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isAnalysing}
+                                    style={{
+                                        padding: "0.8rem 1.2rem",
+                                        borderRadius: "0.8rem",
+                                        background: "var(--accent-gold)",
+                                        border: "none",
+                                        color: "var(--bg-deep)",
+                                        fontWeight: "bold",
+                                        cursor: "pointer",
+                                        opacity: isAnalysing ? 0.6 : 1
+                                    }}
+                                >
+                                    {isAnalysing ? "分析中..." : "診断 ✨"}
+                                </button>
+                            </form>
 
                             <AnimatePresence mode="wait">
-                                {diagStep !== "result" ? (
+                                {isAnalysing ? (
                                     <motion.div
-                                        key={diagStep}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        style={{ minHeight: "12rem", display: "flex", flexDirection: "column", justifyContent: "center" }}
+                                        key="analysing"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        style={{ textAlign: "center", padding: "1rem" }}
                                     >
-                                        <p style={{ fontSize: "1rem", fontWeight: "bold", textAlign: "center", marginBottom: "1.5rem", lineHeight: "1.4" }}>
-                                            {DIAGNOSTIC_TREE[diagStep].question}
-                                        </p>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                                            {DIAGNOSTIC_TREE[diagStep].options.map((opt: any, idx: number) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => handleDiagnosticSelect(opt)}
-                                                    style={{
-                                                        padding: "1rem",
-                                                        borderRadius: "1rem",
-                                                        background: "rgba(255,255,255,0.05)",
-                                                        border: "1px solid rgba(255,255,255,0.1)",
-                                                        color: "white",
-                                                        fontSize: "0.9rem",
-                                                        fontWeight: "bold",
-                                                        cursor: "pointer",
-                                                        transition: "all 0.2s"
-                                                    }}
-                                                >
-                                                    {opt.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {diagStep !== "start" && (
-                                            <button
-                                                onClick={resetDiagnostic}
-                                                style={{ marginTop: "1rem", background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", cursor: "pointer" }}
-                                            >
-                                                最初からやり直す
-                                            </button>
-                                        )}
+                                        <div style={{ fontSize: "2rem", marginBottom: "1rem", animation: "spin 2s linear infinite" }}>⏳</div>
+                                        <p style={{ fontSize: "0.85rem", opacity: 0.8 }}>今のマスターに合う魔法の一杯を抽出中...</p>
                                     </motion.div>
-                                ) : (
+                                ) : recommendation ? (
                                     <motion.div
                                         key="result"
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         style={{
                                             background: "rgba(255,255,255,0.05)",
-                                            padding: "1.5rem",
+                                            padding: "1.2rem",
                                             borderRadius: "1rem",
-                                            border: "1px solid rgba(198, 166, 100, 0.4)",
-                                            textAlign: "center"
+                                            border: "1px solid rgba(198, 166, 100, 0.3)"
                                         }}
                                     >
-                                        <div style={{ fontSize: "0.8rem", color: "var(--accent-gold)", fontWeight: "bold", marginBottom: "1rem", letterSpacing: "2px" }}>DIAGNOSTIC RESULT</div>
-                                        <div style={{ fontSize: "3.5rem", marginBottom: "0.5rem" }}>{diagResult.icon}</div>
-                                        <h4 style={{ fontSize: "1.4rem", fontWeight: "bold", color: "white", marginBottom: "0.2rem" }}>{diagResult.name}</h4>
-                                        <p style={{ fontSize: "0.85rem", color: "var(--accent-gold)", marginBottom: "1.2rem" }}>{diagResult.trait}</p>
-
-                                        <div style={{ fontSize: "0.85rem", background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "0.8rem", marginBottom: "1.5rem", textAlign: "left", lineHeight: "1.6" }}>
-                                            {diagResult.advice}
+                                        <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1rem" }}>
+                                            <div style={{ fontSize: "2.5rem" }}>{recommendation.icon}</div>
+                                            <div>
+                                                <div style={{ fontSize: "0.75rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "1px", marginBottom: "0.2rem" }}>RECOMMENDED BEANS</div>
+                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "white" }}>{recommendation.beans}</div>
+                                                <div style={{ fontSize: "0.8rem", opacity: 0.6 }}>Roast: {recommendation.roast}</div>
+                                            </div>
                                         </div>
-
-                                        <button
-                                            onClick={resetDiagnostic}
-                                            style={{
-                                                width: "100%",
-                                                padding: "0.8rem",
-                                                borderRadius: "0.8rem",
-                                                background: "var(--accent-gold)",
-                                                border: "none",
-                                                color: "var(--bg-deep)",
-                                                fontWeight: "bold",
-                                                cursor: "pointer"
-                                            }}
-                                        >
-                                            もう一度診断する
-                                        </button>
+                                        <div style={{ fontSize: "0.85rem", background: "rgba(0,0,0,0.2)", padding: "0.8rem", borderRadius: "0.6rem", marginBottom: "1rem", borderLeft: "3px solid var(--accent-gold)" }}>
+                                            <strong>特徴:</strong> {recommendation.trait}
+                                        </div>
+                                        <p style={{ fontSize: "0.85rem", lineHeight: "1.6", opacity: 0.9 }}>
+                                            {recommendation.advice}
+                                        </p>
                                     </motion.div>
-                                )}
+                                ) : null}
                             </AnimatePresence>
                         </div>
                     </section>
