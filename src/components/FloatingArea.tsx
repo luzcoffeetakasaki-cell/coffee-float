@@ -354,39 +354,31 @@ function TimelineCard({ post, onClick, isMine }: { post: Post; onClick: () => vo
 }
 
 const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onClick, isMine, total }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean; total: number }) {
-    // 浮遊アニメーション
-    const [floatAnim, setFloatAnim] = useState<any>(null);
-    const [isMounted, setIsMounted] = useState(false);
+    const isMounted = useRef(false);
+    const [isActuallyMounted, setIsActuallyMounted] = useState(false);
 
-    // 縦方向のループアニメーションの設定
-    const verticalDuration = 50 + (index % 5) * 10; // 50〜90秒でゆっくり上昇
-    const horizontalAmplitude = 20 + (index % 3) * 10; // 横揺れの幅
+    // 縦横のゆらゆら揺れるアニメーションの設定
+    const floatDuration = 10 + (index % 5) * 4; // 10〜30秒
+    const horizontalAmplitude = 15 + (index % 3) * 10;
+    const verticalAmplitude = 10 + (index % 4) * 5;
 
     useEffect(() => {
-        setIsMounted(true);
-        setFloatAnim({
-            x: [0, Math.random() * horizontalAmplitude - (horizontalAmplitude / 2), Math.random() * horizontalAmplitude - (horizontalAmplitude / 2), 0],
-            rotate: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
-            transition: {
-                duration: 15 + Math.random() * 10,
-                repeat: Infinity,
-                ease: "easeInOut",
-            }
-        });
+        isMounted.current = true;
+        setIsActuallyMounted(true);
     }, []);
 
     const isTrivia = post.userId === "master";
     const stamp = !isTrivia && post.flavorStamp ? STAMPS[post.flavorStamp] : null;
 
-    if (!isMounted) return null;
+    if (!isActuallyMounted) return null;
 
     return (
         <motion.div
             className={`bubble ${isMine ? "my-post" : ""}`}
             style={{
-                left: initialLeft,
-                top: "110%", // 下からスタート
                 position: 'absolute',
+                left: "50%", // 中央からスタート
+                top: "50%",  // 中央からスタート
                 transform: 'translate(-50%, -50%)',
                 border: isMine ? "1px solid #C6A664" : isTrivia ? "1px dashed rgba(255, 255, 255, 0.4)" : "1px solid rgba(255, 255, 255, 0.2)",
                 boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0, 0, 0, 0.1)",
@@ -409,20 +401,32 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                 gap: "0.8rem",
                 cursor: "pointer",
             }}
-            initial={{ top: "110%" }}
+            initial={{
+                scale: 0,
+                opacity: 0,
+                left: "50%",
+                top: "50%"
+            }}
             animate={{
-                ...floatAnim,
-                top: ["110%", "-10%"],
+                scale: 1,
+                opacity: 1,
+                left: initialLeft,
+                top: initialTop,
+                // ゆらゆら漂う動き
+                x: [0, horizontalAmplitude, -horizontalAmplitude, 0],
+                y: [0, verticalAmplitude, -verticalAmplitude, 0],
+                rotate: [0, 2, -2, 0]
             }}
             transition={{
-                top: {
-                    duration: verticalDuration,
-                    repeat: Infinity,
-                    ease: "linear",
-                    // インデックスに応じて初期位置をずらす（既にある程度上昇した状態から始める）
-                    delay: - (index / total) * verticalDuration
-                },
-                default: { duration: 15, repeat: Infinity, ease: "easeInOut" }
+                // 広がる動き（初期アニメーション）
+                left: { type: "spring", stiffness: 40, damping: 15, delay: index * 0.03 },
+                top: { type: "spring", stiffness: 40, damping: 15, delay: index * 0.03 },
+                scale: { duration: 0.8, delay: index * 0.03 },
+                opacity: { duration: 0.5, delay: index * 0.03 },
+                // 漂う動き（ループアニメーション）
+                x: { duration: floatDuration + 5, repeat: Infinity, ease: "easeInOut" },
+                y: { duration: floatDuration, repeat: Infinity, ease: "easeInOut" },
+                rotate: { duration: floatDuration + 10, repeat: Infinity, ease: "easeInOut" }
             }}
             drag
             dragMomentum={false}
