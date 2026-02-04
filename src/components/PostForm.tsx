@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentUserId } from "@/lib/auth";
 import { checkNgWords } from "@/lib/filter";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { query, collection, where, orderBy, limit, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function PostForm() {
     const searchParams = useSearchParams();
@@ -21,6 +21,7 @@ export default function PostForm() {
     const [userId, setUserId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [recentLocations, setRecentLocations] = useState<string[]>([]);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
 
     const STAMPS = [
@@ -37,11 +38,27 @@ export default function PostForm() {
             setNickname(savedNickname);
         }
 
-        const fetchProfile = async () => {
+        const fetchProfileAndHistory = async () => {
             const id = await getCurrentUserId();
             setUserId(id);
+
+            if (id) {
+                const q = query(
+                    collection(db, "posts"),
+                    where("userId", "==", id),
+                    orderBy("createdAt", "desc"),
+                    limit(20)
+                );
+                const snapshot = await getDocs(q);
+                const locations = snapshot.docs
+                    .map(doc => doc.data().location as string)
+                    .filter(loc => loc && loc.trim() !== "");
+                // ユニークな直近の場所を取得
+                const uniqueLocs = Array.from(new Set(locations)).slice(0, 3);
+                setRecentLocations(uniqueLocs);
+            }
         };
-        fetchProfile();
+        fetchProfileAndHistory();
 
         // 豆リストからの自動入力イベント
         const handleOpenPost = (e: any) => {
@@ -244,9 +261,31 @@ export default function PostForm() {
                             </div>
                         )}
                         <div style={{ marginBottom: "0.8rem" }}>
+                            <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem", marginBottom: "0.3rem", scrollbarWidth: "none" }}>
+                                {["自宅", "職場", ...recentLocations].map((loc, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => setLocation(loc)}
+                                        style={{
+                                            flexShrink: 0,
+                                            padding: "0.3rem 0.6rem",
+                                            borderRadius: "0.5rem",
+                                            fontSize: "0.7rem",
+                                            background: location === loc ? "var(--accent-gold)" : "rgba(255,255,255,0.1)",
+                                            color: location === loc ? "var(--bg-deep)" : "var(--text-main)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                            cursor: "pointer",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        {loc === "自宅" ? "🏠 自宅" : loc === "職場" ? "💼 職場" : `📍 ${loc}`}
+                                    </button>
+                                ))}
+                            </div>
                             <input
                                 type="text"
-                                placeholder="場所 (任意)"
+                                placeholder="どこで飲んだ？ (任意)"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                                 style={inputStyle}
