@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, onSnapshot, Timestamp, doc } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, onSnapshot, Timestamp, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { login } from "@/lib/liff";
@@ -188,7 +188,9 @@ export default function CoffeeLog() {
 
         const q = query(
             collection(db, "notifications"),
-            where("toUserId", "==", userId)
+            where("toUserId", "==", userId),
+            orderBy("createdAt", "desc"),
+            limit(50)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -471,7 +473,7 @@ export default function CoffeeLog() {
                                             {allNotifications.length === 0 ? (
                                                 <p style={{ fontSize: "0.85rem", opacity: 0.5, textAlign: "center", padding: "1rem" }}>まだ通知はありません</p>
                                             ) : (
-                                                allNotifications.map((n) => (
+                                                allNotifications.slice(0, 10).map((n) => (
                                                     <div key={n.id} style={{
                                                         padding: "0.8rem",
                                                         background: n.read ? "rgba(255,255,255,0.03)" : "rgba(198, 166, 100, 0.1)",

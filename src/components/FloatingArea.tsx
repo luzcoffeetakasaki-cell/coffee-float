@@ -220,6 +220,7 @@ export default function FloatingArea() {
                                             initialTop={data.top}
                                             onClick={() => setSelectedPost(data.post)}
                                             isMine={currentUserId === data.post.userId}
+                                            total={bubbleData.length}
                                         />
                                     ))}
                                 </motion.div>
@@ -352,27 +353,29 @@ function TimelineCard({ post, onClick, isMine }: { post: Post; onClick: () => vo
     );
 }
 
-const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean }) {
+const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onClick, isMine, total }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean; total: number }) {
     // 浮遊アニメーション
     const [floatAnim, setFloatAnim] = useState<any>(null);
     const [isMounted, setIsMounted] = useState(false);
 
+    // 縦方向のループアニメーションの設定
+    const verticalDuration = 50 + (index % 5) * 10; // 50〜90秒でゆっくり上昇
+    const horizontalAmplitude = 20 + (index % 3) * 10; // 横揺れの幅
+
     useEffect(() => {
         setIsMounted(true);
         setFloatAnim({
-            x: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
-            y: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
-            rotate: [0, Math.random() * 4 - 2, Math.random() * 4 - 2, 0],
+            x: [0, Math.random() * horizontalAmplitude - (horizontalAmplitude / 2), Math.random() * horizontalAmplitude - (horizontalAmplitude / 2), 0],
+            rotate: [0, Math.random() * 8 - 4, Math.random() * 8 - 4, 0],
             transition: {
-                duration: 20 + Math.random() * 10, // 少しゆっくりに
+                duration: 15 + Math.random() * 10,
                 repeat: Infinity,
-                ease: "linear", // linear のほうが定常的に動いている感じが出る
+                ease: "easeInOut",
             }
         });
     }, []);
 
     const isTrivia = post.userId === "master";
-    // 雑学の場合は味わいタグ（スタンプ/アイコン）を表示しない
     const stamp = !isTrivia && post.flavorStamp ? STAMPS[post.flavorStamp] : null;
 
     if (!isMounted) return null;
@@ -382,10 +385,9 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
             className={`bubble ${isMine ? "my-post" : ""}`}
             style={{
                 left: initialLeft,
-                top: initialTop,
+                top: "110%", // 下からスタート
                 position: 'absolute',
-                transform: 'translate(-50%, -50%)', // 中心合わせ
-                // カプセル型デザイン (Triviaは別デザイン)
+                transform: 'translate(-50%, -50%)',
                 border: isMine ? "1px solid #C6A664" : isTrivia ? "1px dashed rgba(255, 255, 255, 0.4)" : "1px solid rgba(255, 255, 255, 0.2)",
                 boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0, 0, 0, 0.1)",
                 background: isMine
@@ -395,21 +397,33 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                         : "rgba(255, 255, 255, 0.15)",
                 backdropFilter: "blur(5px)",
                 WebkitBackdropFilter: "blur(5px)",
-                zIndex: isMine ? 100 : 10, // 自分の投稿を少し優先
-
-                borderRadius: isTrivia ? "50%" : "50px", // 雑学は完全な円形
+                zIndex: isMine ? 100 : 10,
+                borderRadius: isTrivia ? "50%" : "50px",
                 padding: isTrivia ? "0" : "0.5rem 1rem",
                 width: isTrivia ? "60px" : "auto",
                 height: isTrivia ? "60px" : "auto",
                 aspectRatio: isTrivia ? "1/1" : "auto",
-
                 display: "flex",
                 alignItems: "center",
                 justifyContent: isTrivia ? "center" : "flex-start",
                 gap: "0.8rem",
                 cursor: "pointer",
             }}
-            animate={floatAnim}
+            initial={{ top: "110%" }}
+            animate={{
+                ...floatAnim,
+                top: ["110%", "-10%"],
+            }}
+            transition={{
+                top: {
+                    duration: verticalDuration,
+                    repeat: Infinity,
+                    ease: "linear",
+                    // インデックスに応じて初期位置をずらす（既にある程度上昇した状態から始める）
+                    delay: - (index / total) * verticalDuration
+                },
+                default: { duration: 15, repeat: Infinity, ease: "easeInOut" }
+            }}
             drag
             dragMomentum={false}
             whileHover={{ scale: 1.05, cursor: "grab", zIndex: 200 }}
