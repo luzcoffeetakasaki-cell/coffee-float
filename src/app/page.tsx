@@ -43,13 +43,24 @@ export default function Home() {
 
       {/* Main Content Area */}
       <div style={{ width: "100%", height: "100%" }}>
-        {activeTab === "home" ? (
-          <FloatingArea />
-        ) : activeTab === "log" ? (
-          <CoffeeLog />
-        ) : (
-          <BeanList />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{ width: "100%", height: "100%" }}
+          >
+            {activeTab === "home" ? (
+              <FloatingArea />
+            ) : activeTab === "log" ? (
+              <CoffeeLog />
+            ) : (
+              <BeanList />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <Suspense fallback={null}>
