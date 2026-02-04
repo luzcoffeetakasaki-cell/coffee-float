@@ -12,6 +12,7 @@ interface Post {
     userId: string;
     nickname: string;
     coffeeName: string;
+    coffeeOrigin?: string;
     location: string;
     flavorText: string;
     flavorStamp?: string | null;
@@ -413,9 +414,19 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                             textShadow: isMine ? "none" : "0 1px 2px rgba(0,0,0,0.5)",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
-                            maxWidth: "150px" // コーヒー名の幅制限
+                            maxWidth: "150px"
                         }}>
                             {post.coffeeName}
+                            {post.coffeeOrigin && (
+                                <span style={{
+                                    fontSize: "0.7rem",
+                                    opacity: 0.8,
+                                    marginLeft: "0.3rem",
+                                    color: isMine ? "#8d7b68" : "#C6A664"
+                                }}>
+                                    {post.coffeeOrigin}
+                                </span>
+                            )}
                         </div>
 
                         {/* Footer: Nickname & Location */}

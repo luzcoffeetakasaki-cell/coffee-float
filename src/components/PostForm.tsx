@@ -13,6 +13,7 @@ export default function PostForm() {
     const [isOpen, setIsOpen] = useState(false);
     const [nickname, setNickname] = useState("");
     const [coffeeName, setCoffeeName] = useState("");
+    const [coffeeOrigin, setCoffeeOrigin] = useState("");
     const [location, setLocation] = useState("");
     const [flavorText, setFlavorText] = useState("");
     const [flavorStamp, setFlavorStamp] = useState<string | null>(null);
@@ -65,8 +66,9 @@ export default function PostForm() {
 
         // 豆リストからの自動入力イベント
         const handleOpenPost = (e: any) => {
-            const { coffeeName, location, roastDate } = e.detail;
+            const { coffeeName, coffeeOrigin, location, roastDate } = e.detail;
             setCoffeeName(coffeeName || "");
+            setCoffeeOrigin(coffeeOrigin || "");
             setLocation(location || "");
 
             if (roastDate) {
@@ -117,6 +119,7 @@ export default function PostForm() {
 
     const handleCloseModalAndReset = () => {
         setCoffeeName("");
+        setCoffeeOrigin("");
         setLocation("");
         setFlavorText("");
         setFlavorStamp(null);
@@ -144,7 +147,7 @@ export default function PostForm() {
         if (!coffeeName || !flavorText) return;
 
         // NGワードチェック
-        const foundNg = checkNgWords(flavorText + coffeeName);
+        const foundNg = checkNgWords(flavorText + coffeeName + coffeeOrigin);
         if (foundNg.length > 0) {
             setNgWarning(`「${foundNg[0]}」という言葉が入っているみたい...。ポジティブな言葉でシェアしてみませんか？☕️✨`);
             return;
@@ -172,6 +175,7 @@ export default function PostForm() {
                 userId: userId || "anonymous",
                 nickname: nickname || "名無しのコーヒー好き",
                 coffeeName,
+                coffeeOrigin,
                 location,
                 flavorText,
                 flavorStamp,
@@ -255,15 +259,26 @@ export default function PostForm() {
                                 style={inputStyle}
                             />
                         </div>
-                        <div style={{ marginBottom: "0.8rem" }}>
-                            <input
-                                type="text"
-                                placeholder="コーヒー名 (必須)"
-                                required
-                                value={coffeeName}
-                                onChange={(e) => setCoffeeName(e.target.value)}
-                                style={inputStyle}
-                            />
+                        <div style={{ marginBottom: "0.8rem", display: "flex", gap: "0.5rem" }}>
+                            <div style={{ flex: 2 }}>
+                                <input
+                                    type="text"
+                                    placeholder="品名 (必須)"
+                                    required
+                                    value={coffeeName}
+                                    onChange={(e) => setCoffeeName(e.target.value)}
+                                    style={inputStyle}
+                                />
+                            </div>
+                            <div style={{ flex: 1.5 }}>
+                                <input
+                                    type="text"
+                                    placeholder="生産地 (例 🇪🇹)"
+                                    value={coffeeOrigin}
+                                    onChange={(e) => setCoffeeOrigin(e.target.value)}
+                                    style={inputStyle}
+                                />
+                            </div>
                         </div>
                         {aging !== null && (
                             <div style={{ marginBottom: "0.8rem", textAlign: "right" }}>
@@ -528,9 +543,22 @@ export default function PostForm() {
                                 COFFEE LOG
                             </div>
 
-                            <h2 style={{ fontSize: "2rem", color: "white", marginBottom: "1rem", fontWeight: "bold", lineHeight: "1.2" }}>
+                            <h2 style={{ fontSize: "2rem", color: "white", marginBottom: "0.5rem", fontWeight: "bold", lineHeight: "1.2" }}>
                                 {lastSharedData?.coffeeName}
                             </h2>
+                            <div style={{
+                                fontSize: "1.2rem",
+                                color: "var(--accent-gold)",
+                                marginBottom: "1.5rem",
+                                fontWeight: "bold",
+                                opacity: 0.9,
+                                background: "rgba(198, 166, 100, 0.1)",
+                                padding: "0.2rem 1rem",
+                                borderRadius: "1rem",
+                                border: "1px solid rgba(198, 166, 100, 0.2)"
+                            }}>
+                                {lastSharedData?.coffeeOrigin || "ORIGIN UNKNOWN"}
+                            </div>
 
                             <div style={{ fontSize: "1rem", opacity: 0.7, marginBottom: "3rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 📍 {lastSharedData?.location || "My Coffee Spot"}
@@ -588,7 +616,7 @@ export default function PostForm() {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                const text = `${lastSharedData?.coffeeName} ☕️✨\n場所: ${lastSharedData?.location || "不明"}\n気分: ${lastSharedData?.flavorStamp}\n"${lastSharedData?.flavorText}"\n#CoffeeFloat #CoffeeLog`;
+                                                const text = `${lastSharedData?.coffeeName} (${lastSharedData?.coffeeOrigin || "産地不明"}) ☕️✨\n場所: ${lastSharedData?.location || "不明"}\n気分: ${lastSharedData?.flavorStamp}\n"${lastSharedData?.flavorText}"\n#CoffeeFloat #CoffeeLog`;
                                                 copyToClipboard(text);
                                             }}
                                             style={{

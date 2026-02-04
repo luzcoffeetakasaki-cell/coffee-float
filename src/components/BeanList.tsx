@@ -137,6 +137,7 @@ export default function BeanList() {
         const event = new CustomEvent("coffee-float:open-post", {
             detail: {
                 coffeeName: bean.name,
+                coffeeOrigin: bean.origin || "",
                 location: bean.shopName || "",
                 roastDate: bean.roastDate
             }

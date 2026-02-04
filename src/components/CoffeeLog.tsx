@@ -16,6 +16,7 @@ interface Post {
     userId: string;
     nickname: string;
     coffeeName: string;
+    coffeeOrigin?: string;
     location: string;
     flavorText: string;
     flavorStamp?: string | null;
@@ -820,8 +821,18 @@ export default function CoffeeLog() {
                                     }}
                                 >
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                                             <span style={{ fontWeight: "bold" }}>{post.coffeeName}</span>
+                                            {post.coffeeOrigin && (
+                                                <span style={{
+                                                    fontSize: "0.75rem",
+                                                    color: "var(--accent-gold)",
+                                                    opacity: 0.8,
+                                                    background: "rgba(198, 166, 100, 0.1)",
+                                                    padding: "0.1rem 0.5rem",
+                                                    borderRadius: "0.4rem"
+                                                }}>{post.coffeeOrigin}</span>
+                                            )}
                                             {post.isFavorite && <span style={{ fontSize: "1rem" }}>❤️</span>}
                                         </div>
                                         {post.flavorStamp && (

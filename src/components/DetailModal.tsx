@@ -11,6 +11,7 @@ interface Post {
     userId: string; // 通知用に追加
     nickname: string;
     coffeeName: string;
+    coffeeOrigin?: string;
     location: string;
     flavorText: string;
     flavorStamp?: string | null;
@@ -43,6 +44,7 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
     const [isOwner, setIsOwner] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editCoffeeName, setEditCoffeeName] = useState(post.coffeeName);
+    const [editCoffeeOrigin, setEditCoffeeOrigin] = useState(post.coffeeOrigin || "");
     const [editLocation, setEditLocation] = useState(post.location);
     const [editFlavorText, setEditFlavorText] = useState(post.flavorText);
     const [editFlavorStamp, setEditFlavorStamp] = useState(post.flavorStamp);
@@ -76,15 +78,19 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
 
     const handleUpdate = async () => {
         try {
-            await updateDoc(doc(db, "posts", post.id), {
+            const updatedData = {
                 coffeeName: editCoffeeName,
+                coffeeOrigin: editCoffeeOrigin,
                 location: editLocation,
                 flavorText: editFlavorText,
-                flavorStamp: editFlavorStamp
-            });
+                flavorStamp: editFlavorStamp,
+                updatedAt: serverTimestamp()
+            };
+            await updateDoc(doc(db, "posts", post.id), updatedData);
 
             // ローカルの表示も更新（親コンポーネントの再レンダリングを待たずに反映させるため）
             post.coffeeName = editCoffeeName;
+            post.coffeeOrigin = editCoffeeOrigin;
             post.location = editLocation;
             post.flavorText = editFlavorText;
             post.flavorStamp = editFlavorStamp;
@@ -336,26 +342,61 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 )}
 
                 {isEditing ? (
-                    <input
-                        value={editCoffeeName}
-                        onChange={(e) => setEditCoffeeName(e.target.value)}
-                        placeholder="コーヒー名"
-                        style={{
-                            fontSize: "1.5rem",
-                            color: "var(--accent-gold)",
-                            background: "rgba(255,255,255,0.1)",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "0.5rem",
-                            width: "100%",
-                            marginBottom: "1rem",
-                            fontWeight: "bold"
-                        }}
-                    />
+                    <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+                        <div style={{ flex: 2 }}>
+                            <input
+                                type="text"
+                                value={editCoffeeName}
+                                onChange={(e) => setEditCoffeeName(e.target.value)}
+                                placeholder="品名..."
+                                style={{
+                                    fontSize: "1.2rem",
+                                    padding: "0.8rem",
+                                    background: "rgba(255,255,255,0.1)",
+                                    border: "none",
+                                    borderRadius: "0.8rem",
+                                    color: "var(--accent-gold)",
+                                    width: "100%",
+                                    fontWeight: "bold"
+                                }}
+                            />
+                        </div>
+                        <div style={{ flex: 1.5 }}>
+                            <input
+                                type="text"
+                                value={editCoffeeOrigin}
+                                onChange={(e) => setEditCoffeeOrigin(e.target.value)}
+                                placeholder="生産地..."
+                                style={{
+                                    fontSize: "1.2rem",
+                                    padding: "0.8rem",
+                                    background: "rgba(255,255,255,0.1)",
+                                    border: "none",
+                                    borderRadius: "0.8rem",
+                                    color: "var(--accent-gold)",
+                                    width: "100%",
+                                    fontWeight: "bold"
+                                }}
+                            />
+                        </div>
+                    </div>
                 ) : (
-                    <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)", marginBottom: "1rem" }}>
-                        {post.coffeeName}
-                    </h2>
+                    <div style={{ marginBottom: "1rem" }}>
+                        <h2 style={{ fontSize: "1.5rem", color: "var(--accent-gold)", marginBottom: "0.2rem", lineHeight: "1.2" }}>
+                            {post.coffeeName}
+                        </h2>
+                        {post.coffeeOrigin && (
+                            <div style={{
+                                fontSize: "1rem",
+                                opacity: 0.7,
+                                color: "var(--accent-gold)",
+                                display: "inline-block",
+                                borderBottom: "1px solid rgba(198, 166, 100, 0.3)"
+                            }}>
+                                {post.coffeeOrigin}
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {isEditing ? (
