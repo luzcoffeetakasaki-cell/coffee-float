@@ -8,14 +8,19 @@ import { login } from "@/lib/liff";
 import { writeBatch, getDocs } from "firebase/firestore";
 import { usePWA } from "@/hooks/usePWA";
 import { motion } from "framer-motion";
+import DetailModal from "./DetailModal";
 
 interface Post {
     id: string;
+    userId: string;
+    nickname: string;
     coffeeName: string;
+    location: string;
     flavorText: string;
     flavorStamp?: string | null;
     isFavorite?: boolean;
     aging?: number | null;
+    likes: number;
     createdAt: Timestamp;
 }
 
@@ -50,6 +55,7 @@ export default function CoffeeLog() {
     const [keywordStats, setKeywordStats] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
     const [nickname, setNickname] = useState("");
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const isPWA = usePWA();
 
@@ -502,12 +508,18 @@ export default function CoffeeLog() {
                         <h3 style={{ fontSize: "1rem", marginBottom: "1rem", opacity: 0.8 }}>最近のログ 📜</h3>
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             {posts.map(post => (
-                                <div key={post.id} style={{
-                                    padding: "1rem",
-                                    background: "rgba(0,0,0,0.2)",
-                                    borderRadius: "1rem",
-                                    border: "1px solid rgba(255,255,255,0.1)"
-                                }}>
+                                <motion.div
+                                    key={post.id}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setSelectedPost(post)}
+                                    style={{
+                                        padding: "1rem",
+                                        background: "rgba(0,0,0,0.2)",
+                                        borderRadius: "1rem",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        cursor: "pointer"
+                                    }}
+                                >
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                             <span style={{ fontWeight: "bold" }}>{post.coffeeName}</span>
@@ -532,13 +544,21 @@ export default function CoffeeLog() {
                                             </span>
                                         </div>
                                     )}
-                                    <p style={{ fontSize: "0.9rem", opacity: 0.8 }}>{post.flavorText}</p>
-                                </div>
+                                    <p style={{
+                                        fontSize: "0.9rem",
+                                        opacity: 0.8,
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: "2",
+                                        WebkitBoxOrient: "vertical",
+                                        overflow: "hidden"
+                                    }}>{post.flavorText}</p>
+                                </motion.div>
                             ))}
                         </div>
                     </section>
                 </>
             )}
+            <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
         </div>
     );
 }
