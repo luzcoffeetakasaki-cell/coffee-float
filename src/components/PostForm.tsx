@@ -199,10 +199,13 @@ export default function PostForm() {
                         right: "2rem",
                         width: "calc(100% - 4rem)",
                         maxWidth: "400px",
+                        maxHeight: "calc(100dvh - 16rem)", // ヘッダーとの被りを防ぐ
+                        overflowY: "auto",
                         zIndex: 99,
                         padding: "1.5rem",
                         borderRadius: "1.5rem",
                         color: "var(--text-main)",
+                        boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
                     }}
                 >
                     <h2 style={{ marginBottom: "1rem", fontSize: "1.2rem", color: "var(--accent-gold)" }}>今の気分をシェア ✨</h2>
