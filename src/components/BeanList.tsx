@@ -68,25 +68,29 @@ export default function BeanList() {
     };
 
     useEffect(() => {
-        if (!userId) {
-            // userIdが確定して、かつnull（エラーなど）の場合はロード終了
-            if (userId === null && !loading) {
-                setLoading(false);
-            }
-            return;
-        }
+        console.log("Current UserId in BeanList:", userId);
+    }, [userId]);
 
+    useEffect(() => {
+        if (!userId) return;
+
+        console.log("Starting Bean listener for:", userId);
         const q = query(
             collection(db, "beans"),
-            where("userId", "==", userId),
-            orderBy("createdAt", "desc")
+            where("userId", "==", userId)
+            // orderByを外してインデックス不足による同期不全を回避
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
+            console.log("Bean Snapshot received, count:", snapshot.size);
             const newBeans = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             })) as Bean[];
+
+            // 手動でソート
+            newBeans.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+
             setBeans(newBeans);
             setLoading(false);
         }, (error) => {
