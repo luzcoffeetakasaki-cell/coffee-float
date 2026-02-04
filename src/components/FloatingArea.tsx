@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { motion, Variants, AnimatePresence } from "framer-motion";
@@ -40,7 +40,7 @@ export default function FloatingArea() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
+    const containerRef = useRef<HTMLDivElement>(null);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
     const [viewMode, setViewMode] = useState<"float" | "timeline">("float");
 
@@ -82,6 +82,15 @@ export default function FloatingArea() {
             setPosts(getRandomTrivia());
         }
     }, []);
+
+    // 画面中央にスクロール
+    useEffect(() => {
+        if (viewMode === "float" && containerRef.current) {
+            const { scrollWidth, scrollHeight, clientWidth, clientHeight } = containerRef.current;
+            containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
+            containerRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
+        }
+    }, [viewMode, posts]); // データ読み込み後やモード切り替え時に中央へ 
 
     return (
         <>
@@ -133,13 +142,26 @@ export default function FloatingArea() {
                 </button>
             </div>
 
-            <div style={{
-                width: "100%",
-                height: "100%",
-                overflowY: viewMode === "timeline" ? "auto" : "hidden",
-                paddingTop: viewMode === "timeline" ? "9rem" : "0",
-                paddingBottom: viewMode === "timeline" ? "8rem" : "0"
-            }}>
+            <div
+                ref={containerRef}
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    overflow: viewMode === "timeline" ? "auto" : "scroll",
+                    paddingTop: viewMode === "timeline" ? "9rem" : "0",
+                    paddingBottom: viewMode === "timeline" ? "8rem" : "0",
+                    position: "relative",
+                    scrollBehavior: "smooth",
+                    msOverflowStyle: "none",  /* IE and Edge */
+                    scrollbarWidth: "none",  /* Firefox */
+                }}
+                className="hide-scrollbar"
+            >
+                <style>{`
+                    .hide-scrollbar::-webkit-scrollbar {
+                        display: none;
+                    }
+                `}</style>
                 <AnimatePresence mode="wait">
                     {viewMode === "float" ? (
                         <motion.div
@@ -148,22 +170,28 @@ export default function FloatingArea() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="floating-layer"
-                            style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}
+                            style={{
+                                position: "absolute", // Changed from relative to absolute inside scrollable container
+                                width: "300%",
+                                height: "300%",
+                                overflow: "hidden",
+                                pointerEvents: "auto" // Allow bubble clicks
+                            }}
                         >
                             {!isLoadingUser && posts.map((post, index) => {
-                                // 画面分割によるグリッド配置 + ランダムオフセット
-                                const columns = 3; // 縦向きスマホを想定
-                                const rows = Math.ceil(posts.length / columns);
-                                const gridX = index % columns;
-                                const gridY = Math.floor(index / columns) % 8; // 8行分くらいでループ
+                                // 広いキャンバス(300%x300%)の中央付近に集まるようにグリッドを計算
+                                const totalCells = 72; // 6 columns * 12 rows
+                                const offsetIndex = index + Math.floor((totalCells - posts.length) / 2);
 
-                                // 各グリッド内での位置 (20% ~ 80% の範囲でランダム)
-                                const offsetX = 15 + Math.random() * 70;
-                                const offsetY = 15 + Math.random() * 70;
+                                const columns = 6;
+                                const gridX = offsetIndex % columns;
+                                const gridY = Math.floor(offsetIndex / columns) % 12;
 
-                                // 最終的な％位置
+                                const offsetX = 20 + Math.random() * 60;
+                                const offsetY = 20 + Math.random() * 60;
+
                                 const left = ((gridX + offsetX / 100) / columns) * 100;
-                                const top = ((gridY + offsetY / 100) / 8) * 100 + 5; // 上下に少しマージン
+                                const top = ((gridY + offsetY / 100) / 12) * 100;
 
                                 return (
                                     <Bubble
