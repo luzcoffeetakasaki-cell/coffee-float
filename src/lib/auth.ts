@@ -1,4 +1,4 @@
-import { getLiffProfile } from "./liff";
+import { getLiffProfile, liffReady } from "./liff";
 
 const STORAGE_KEY = "coffee_float_device_userId";
 
@@ -9,6 +9,9 @@ const STORAGE_KEY = "coffee_float_device_userId";
  * 3. デバイスIDもなければ、新規に生成して保存します。
  */
 export const getCurrentUserId = async (): Promise<string> => {
+    // Wait for LIFF initialization to ensure isLoggedIn() status is reliable
+    await liffReady;
+
     // 1. LIFF ID try
     try {
         const profile = await getLiffProfile();
