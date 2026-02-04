@@ -8,13 +8,14 @@ import CoffeeLog from "@/components/CoffeeLog";
 import BeanList from "@/components/BeanList";
 import LineOpenBanner from "@/components/LineOpenBanner";
 import { motion, AnimatePresence } from "framer-motion";
+import BottomNav from "@/components/BottomNav";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "log" | "beans">("home");
 
   return (
     <main style={{ height: "100dvh", position: "relative", overflow: "hidden" }}>
-      {/* Header Area (Visible only on Home?) Decision: Visible on both for branding */}
+      {/* Header Area */}
       <div style={{
         position: "fixed",
         top: "1.5rem",
@@ -69,80 +70,8 @@ export default function Home() {
         zIndex: 0
       }} />
 
-      {/* Bottom Navigation */}
-      <div style={{
-        position: "fixed",
-        bottom: "1.5rem",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 90,
-        background: "rgba(30, 15, 10, 0.8)",
-        backdropFilter: "blur(10px)",
-        borderRadius: "2rem",
-        padding: "0.5rem",
-        display: "flex",
-        gap: "0.5rem",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-        border: "1px solid rgba(198, 166, 100, 0.2)"
-      }}>
-        <button
-          onClick={() => setActiveTab("home")}
-          style={{
-            background: activeTab === "home" ? "var(--accent-gold)" : "transparent",
-            color: activeTab === "home" ? "#1e0f0a" : "var(--accent-gold)",
-            border: "none",
-            borderRadius: "1.5rem",
-            padding: "0.8rem 1.5rem", // Slightly larger hit area
-            fontSize: "0.9rem",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem"
-          }}
-        >
-          <span>🏠</span> ホーム
-        </button>
-        <button
-          onClick={() => setActiveTab("log")}
-          style={{
-            background: activeTab === "log" ? "var(--accent-gold)" : "transparent",
-            color: activeTab === "log" ? "#1e0f0a" : "var(--accent-gold)",
-            border: "none",
-            borderRadius: "1.5rem",
-            padding: "0.8rem 1.5rem",
-            fontSize: "0.9rem",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem"
-          }}
-        >
-          <span>📊</span> ログ
-        </button>
-        <button
-          onClick={() => setActiveTab("beans")}
-          style={{
-            background: activeTab === "beans" ? "var(--accent-gold)" : "transparent",
-            color: activeTab === "beans" ? "#1e0f0a" : "var(--accent-gold)",
-            border: "none",
-            borderRadius: "1.5rem",
-            padding: "0.8rem 1.5rem",
-            fontSize: "0.9rem",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem"
-          }}
-        >
-          <span>🫘</span> 豆
-        </button>
-      </div>
+      {/* Modern Bottom Navigation */}
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </main>
   );
 }
