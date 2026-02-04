@@ -163,23 +163,26 @@ export default function FloatingArea() {
                 const bubbleData = useMemo(() => {
                     const combined = [...posts, ...triviaItems];
                     const count = combined.length || 1;
-                    const columns = 3;
-                    const rowsCount = Math.ceil(count / columns);
+
+                    // 動的に列数を調整 (最大3列)
+                    const cols = Math.min(count, 3);
+                    const rowsCount = Math.ceil(count / cols);
 
                     return combined.map((post, index) => {
-                        const gridX = index % columns;
-                        const gridY = Math.floor(index / columns);
+                        const gridX = index % cols;
+                        const gridY = Math.floor(index / cols);
 
                         const seed = post.id || `trivia-${index}`;
                         const offsetX = 10 + getDeterministicRandom(seed + "x") * 80;
                         const offsetY = 10 + getDeterministicRandom(seed + "y") * 80;
 
-                        // 横方向の中央寄せ
-                        const leftInCell = (gridX + offsetX / 100) / columns;
+                        // 横方向の中央寄せ (列数に合わせて配置)
+                        const colCenterOffset = (cols === 3) ? 0 : (3 - cols) / 2;
+                        const leftInCell = (gridX + colCenterOffset + offsetX / 100) / 3;
                         const left = leftInCell * 100;
 
-                        // 縦方向の中央寄せ (全行数に合わせてオフセットをつける)
-                        const rowCenterOffset = (5 - rowsCount) / 2; // 最大5行想定で中央に寄せる
+                        // 縦方向の中央寄せ
+                        const rowCenterOffset = (5 - rowsCount) / 2;
                         const topInCell = (gridY + rowCenterOffset + offsetY / 100) / 5;
                         const top = topInCell * 100;
 
@@ -211,10 +214,11 @@ export default function FloatingArea() {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     style={{
-                                        position: "absolute",
+                                        position: "fixed",
                                         inset: 0,
                                         overflow: "hidden",
-                                        pointerEvents: "auto"
+                                        pointerEvents: "auto",
+                                        zIndex: 1,
                                     }}
                                 >
                                     {!isLoadingUser && bubbleData.map((data) => (
