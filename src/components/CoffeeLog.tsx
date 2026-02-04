@@ -72,6 +72,7 @@ export default function CoffeeLog() {
     const [moodQuery, setMoodQuery] = useState("");
     const [recommendation, setRecommendation] = useState<typeof MOOD_REC_MAP[keyof typeof MOOD_REC_MAP] | null>(null);
     const [isAnalysing, setIsAnalysing] = useState(false);
+    const [isNotifCollapsed, setIsNotifCollapsed] = useState(true);
     const isPWA = usePWA();
 
     useEffect(() => {
@@ -365,77 +366,107 @@ export default function CoffeeLog() {
 
                     {/* お知らせセクション */}
                     <section style={{ marginBottom: "2rem" }}>
-                        <div className="glass-panel" style={{ padding: "1.5rem", borderRadius: "1.5rem" }}>
-                            <h3 style={{ fontSize: "1.1rem", marginBottom: "1.2rem", color: "var(--accent-gold)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                お知らせ
-                                {unreadCount > 0 && (
-                                    <span style={{ background: "#ff4b2b", color: "white", fontSize: "0.7rem", padding: "0.1rem 0.5rem", borderRadius: "1rem" }}>
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </h3>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-                                {notifications.length === 0 ? (
-                                    <p style={{ fontSize: "0.85rem", opacity: 0.5, textAlign: "center", padding: "1rem" }}>まだ通知はありません</p>
-                                ) : (
-                                    notifications.map((n) => (
-                                        <div key={n.id} style={{
-                                            padding: "0.8rem",
-                                            background: n.read ? "rgba(255,255,255,0.03)" : "rgba(198, 166, 100, 0.1)",
-                                            borderRadius: "0.8rem",
-                                            fontSize: "0.85rem",
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            border: n.read ? "1px solid transparent" : "1px solid rgba(198, 166, 100, 0.3)",
-                                            position: "relative"
-                                        }}>
-                                            <div>
-                                                🥂 {n.senderNickname}さんがあなたの「{n.coffeeName}」に乾杯しました！
-                                                {!n.read && <span style={{ marginLeft: "0.5rem", color: "var(--accent-gold)", fontSize: "0.7rem" }}>●</span>}
-                                                <p style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.2rem" }}>
-                                                    {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString("ja-JP") : "たった今"}
-                                                </p>
-                                            </div>
-                                            {!n.read && (
-                                                <button
-                                                    onClick={() => markAsRead(n.id)}
-                                                    style={{
-                                                        background: "var(--accent-gold)",
-                                                        color: "#1e0f0a",
-                                                        border: "none",
-                                                        borderRadius: "0.5rem",
-                                                        padding: "0.3rem 0.6rem",
-                                                        fontSize: "0.7rem",
-                                                        fontWeight: "bold",
-                                                        cursor: "pointer"
-                                                    }}
-                                                >
-                                                    確認
-                                                </button>
+                        <div className="glass-panel" style={{ padding: "1.2rem", borderRadius: "1.5rem" }}>
+                            <div
+                                onClick={() => setIsNotifCollapsed(!isNotifCollapsed)}
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    cursor: "pointer",
+                                    marginBottom: isNotifCollapsed ? "0" : "1.2rem"
+                                }}
+                            >
+                                <h3 style={{ fontSize: "1.1rem", color: "var(--accent-gold)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                    お知らせ
+                                    {unreadCount > 0 && (
+                                        <span style={{ background: "#ff4b2b", color: "white", fontSize: "0.7rem", padding: "0.1rem 0.5rem", borderRadius: "1rem" }}>
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </h3>
+                                <motion.span
+                                    animate={{ rotate: isNotifCollapsed ? 0 : 180 }}
+                                    style={{ fontSize: "1.2rem", opacity: 0.5 }}
+                                >
+                                    ▼
+                                </motion.span>
+                            </div>
+
+                            <AnimatePresence>
+                                {!isNotifCollapsed && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        style={{ overflow: "hidden" }}
+                                    >
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                                            {notifications.length === 0 ? (
+                                                <p style={{ fontSize: "0.85rem", opacity: 0.5, textAlign: "center", padding: "1rem" }}>まだ通知はありません</p>
+                                            ) : (
+                                                notifications.map((n) => (
+                                                    <div key={n.id} style={{
+                                                        padding: "0.8rem",
+                                                        background: n.read ? "rgba(255,255,255,0.03)" : "rgba(198, 166, 100, 0.1)",
+                                                        borderRadius: "0.8rem",
+                                                        fontSize: "0.85rem",
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        border: n.read ? "1px solid transparent" : "1px solid rgba(198, 166, 100, 0.3)",
+                                                        position: "relative"
+                                                    }}>
+                                                        <div style={{ paddingRight: "0.5rem" }}>
+                                                            🥂 {n.senderNickname}さんがあなたの「{n.coffeeName}」に乾杯しました！
+                                                            {!n.read && <span style={{ marginLeft: "0.5rem", color: "var(--accent-gold)", fontSize: "0.7rem" }}>●</span>}
+                                                            <p style={{ fontSize: "0.7rem", opacity: 0.6, marginTop: "0.2rem" }}>
+                                                                {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString("ja-JP") : "たった今"}
+                                                            </p>
+                                                        </div>
+                                                        {!n.read && (
+                                                            <button
+                                                                onClick={() => markAsRead(n.id)}
+                                                                style={{
+                                                                    flexShrink: 0,
+                                                                    background: "var(--accent-gold)",
+                                                                    color: "#1e0f0a",
+                                                                    border: "none",
+                                                                    borderRadius: "0.5rem",
+                                                                    padding: "0.3rem 0.6rem",
+                                                                    fontSize: "0.7rem",
+                                                                    fontWeight: "bold",
+                                                                    cursor: "pointer"
+                                                                }}
+                                                            >
+                                                                確認
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))
                                             )}
                                         </div>
-                                    ))
+                                        {unreadCount > 0 && (
+                                            <button
+                                                onClick={markAllAsRead}
+                                                style={{
+                                                    width: "100%",
+                                                    marginTop: "1rem",
+                                                    padding: "0.5rem",
+                                                    background: "rgba(198, 166, 100, 0.2)",
+                                                    border: "1px solid rgba(198, 166, 100, 0.3)",
+                                                    borderRadius: "0.8rem",
+                                                    color: "var(--accent-gold)",
+                                                    fontSize: "0.8rem",
+                                                    cursor: "pointer"
+                                                }}
+                                            >
+                                                すべて既読にする
+                                            </button>
+                                        )}
+                                    </motion.div>
                                 )}
-                            </div>
-                            {unreadCount > 0 && (
-                                <button
-                                    onClick={markAllAsRead}
-                                    style={{
-                                        width: "100%",
-                                        marginTop: "1rem",
-                                        padding: "0.5rem",
-                                        background: "rgba(198, 166, 100, 0.2)",
-                                        border: "1px solid rgba(198, 166, 100, 0.3)",
-                                        borderRadius: "0.8rem",
-                                        color: "var(--accent-gold)",
-                                        fontSize: "0.8rem",
-                                        cursor: "pointer"
-                                    }}
-                                >
-                                    すべて既読にする
-                                </button>
-                            )}
+                            </AnimatePresence>
                         </div>
                     </section>
 
