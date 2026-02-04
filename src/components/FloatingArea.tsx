@@ -354,16 +354,14 @@ function TimelineCard({ post, onClick, isMine }: { post: Post; onClick: () => vo
 }
 
 const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onClick, isMine, total }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean; total: number }) {
-    const isMounted = useRef(false);
     const [isActuallyMounted, setIsActuallyMounted] = useState(false);
 
     // 縦横のゆらゆら揺れるアニメーションの設定
-    const floatDuration = 10 + (index % 5) * 4; // 10〜30秒
-    const horizontalAmplitude = 15 + (index % 3) * 10;
-    const verticalAmplitude = 10 + (index % 4) * 5;
+    const floatDuration = 10 + (index % 5) * 4;
+    const horizontalAmplitude = 1 + (index % 3) * 0.5; // %単位でゆらす
+    const verticalAmplitude = 1 + (index % 4) * 0.5;
 
     useEffect(() => {
-        isMounted.current = true;
         setIsActuallyMounted(true);
     }, []);
 
@@ -377,9 +375,6 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
             className={`bubble ${isMine ? "my-post" : ""}`}
             style={{
                 position: 'absolute',
-                left: "50%", // 中央からスタート
-                top: "50%",  // 中央からスタート
-                transform: 'translate(-50%, -50%)',
                 border: isMine ? "1px solid #C6A664" : isTrivia ? "1px dashed rgba(255, 255, 255, 0.4)" : "1px solid rgba(255, 255, 255, 0.2)",
                 boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0, 0, 0, 0.1)",
                 background: isMine
@@ -405,28 +400,30 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                 scale: 0,
                 opacity: 0,
                 left: "50%",
-                top: "50%"
+                top: "45%", // スマホだとナビゲーション分少し上が中心に見える
+                x: "-50%",
+                y: "-50%"
             }}
             animate={{
                 scale: 1,
                 opacity: 1,
                 left: initialLeft,
                 top: initialTop,
-                // ゆらゆら漂う動き
-                x: [0, horizontalAmplitude, -horizontalAmplitude, 0],
-                y: [0, verticalAmplitude, -verticalAmplitude, 0],
-                rotate: [0, 2, -2, 0]
+                // ゆらゆら漂う動き（-50%のベースを維持したまま数％動かす）
+                x: ["-50%", `-${50 - horizontalAmplitude}%`, `-${50 + horizontalAmplitude}%`, "-50%"],
+                y: ["-50%", `-${50 - verticalAmplitude}%`, `-${50 + verticalAmplitude}%`, "-50%"],
+                rotate: [0, 1.5, -1.5, 0]
             }}
             transition={{
-                // 広がる動き（初期アニメーション）
-                left: { type: "spring", stiffness: 40, damping: 15, delay: index * 0.03 },
-                top: { type: "spring", stiffness: 40, damping: 15, delay: index * 0.03 },
-                scale: { duration: 0.8, delay: index * 0.03 },
-                opacity: { duration: 0.5, delay: index * 0.03 },
-                // 漂う動き（ループアニメーション）
-                x: { duration: floatDuration + 5, repeat: Infinity, ease: "easeInOut" },
+                // 広がる動き
+                left: { type: "spring", stiffness: 45, damping: 18, delay: index * 0.02 },
+                top: { type: "spring", stiffness: 45, damping: 18, delay: index * 0.02 },
+                scale: { duration: 0.6, delay: index * 0.02 },
+                opacity: { duration: 0.4, delay: index * 0.02 },
+                // 漂う動き
+                x: { duration: floatDuration + 3, repeat: Infinity, ease: "easeInOut" },
                 y: { duration: floatDuration, repeat: Infinity, ease: "easeInOut" },
-                rotate: { duration: floatDuration + 10, repeat: Infinity, ease: "easeInOut" }
+                rotate: { duration: floatDuration + 5, repeat: Infinity, ease: "easeInOut" }
             }}
             drag
             dragMomentum={false}
