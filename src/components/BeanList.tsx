@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
+import { writeBatch, getDocs } from "firebase/firestore";
 
 interface Bean {
     id: string;
@@ -28,8 +29,38 @@ export default function BeanList() {
     const [roastDate, setRoastDate] = useState("");
 
     useEffect(() => {
-        getCurrentUserId().then(setUserId);
+        const initUser = async () => {
+            const id = await getCurrentUserId();
+            setUserId(id);
+
+            // データ移行（ゲストID -> LINE ID）のチェック
+            const storedGuestId = getStoredDeviceId();
+            if (id && !isGuestUserId(id) && storedGuestId && isGuestUserId(storedGuestId)) {
+                migrateGuestData(storedGuestId, id);
+            }
+        };
+        initUser();
     }, []);
+
+    const migrateGuestData = async (guestId: string, lineId: string) => {
+        try {
+            const q = query(
+                collection(db, "beans"),
+                where("userId", "==", guestId)
+            );
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return;
+
+            const batch = writeBatch(db);
+            snapshot.docs.forEach((docSnap) => {
+                batch.update(docSnap.ref, { userId: lineId });
+            });
+            await batch.commit();
+            console.log(`Migrated ${snapshot.size} beans from ${guestId} to ${lineId}`);
+        } catch (error) {
+            console.error("Migration failed", error);
+        }
+    };
 
     useEffect(() => {
         if (!userId) return;
@@ -47,6 +78,13 @@ export default function BeanList() {
             })) as Bean[];
             setBeans(newBeans);
             setLoading(false);
+        }, (error) => {
+            console.error("Bean listener failed:", error);
+            setLoading(false);
+            // インデックス不足の可能性などを考慮してエラーを出す
+            if (error.code === "failed-precondition") {
+                console.warn("Firestore index might be missing for beans collection.");
+            }
         });
 
         return () => unsubscribe();
