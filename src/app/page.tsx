@@ -90,7 +90,7 @@ export default function Home() {
       </div>
 
       <Suspense fallback={null}>
-        <PostForm />
+        <PostForm showTriggerButton={activeTab === "home"} />
       </Suspense>
       <Disclaimer />
       <LineOpenBanner />

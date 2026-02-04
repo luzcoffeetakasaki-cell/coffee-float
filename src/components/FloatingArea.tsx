@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { motion, Variants, AnimatePresence } from "framer-motion";
 import { getCurrentUserId } from "@/lib/auth";
 import { TRIVIA_POSTS } from "@/data/triviaPosts";
+import DailyReminder from "./DailyReminder";
 
 interface Post {
     id: string;
@@ -251,6 +252,23 @@ export default function FloatingArea() {
             })()}
 
             <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+
+            <DailyReminder
+                posts={posts}
+                currentUserId={currentUserId}
+                onOpenPost={() => {
+                    // Trigger custom event to open PostForm
+                    const event = new CustomEvent("coffee-float:open-post", {
+                        detail: {
+                            coffeeName: "",
+                            coffeeOrigin: "",
+                            location: "",
+                            roastDate: ""
+                        }
+                    });
+                    window.dispatchEvent(event);
+                }}
+            />
         </>
     );
 }

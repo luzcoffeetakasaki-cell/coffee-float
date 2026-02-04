@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { query, collection, where, orderBy, limit, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 
-export default function PostForm() {
+export default function PostForm({ showTriggerButton = true }: { showTriggerButton?: boolean }) {
     const searchParams = useSearchParams();
     const [isOpen, setIsOpen] = useState(false);
     const [nickname, setNickname] = useState("");
@@ -204,31 +204,33 @@ export default function PostForm() {
 
     return (
         <>
-            <button
-                style={{
-                    position: "fixed",
-                    bottom: "6rem",
-                    right: "2rem",
-                    zIndex: 100,
-                    width: "60px",
-                    height: "60px",
-                    borderRadius: "30px",
-                    fontSize: "2rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    border: "none",
-                    backgroundColor: "var(--accent-gold)",
-                    color: "var(--bg-deep)",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                    transition: "transform 0.2s",
-                }}
-                onClick={() => setIsOpen(!isOpen)}
-                aria-label="投稿する"
-            >
-                {isOpen ? "×" : "☕"}
-            </button>
+            {showTriggerButton && (
+                <button
+                    style={{
+                        position: "fixed",
+                        bottom: "6rem",
+                        right: "2rem",
+                        zIndex: 100,
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "30px",
+                        fontSize: "2rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        border: "none",
+                        backgroundColor: "var(--accent-gold)",
+                        color: "var(--bg-deep)",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                        transition: "transform 0.2s",
+                    }}
+                    onClick={() => setIsOpen(!isOpen)}
+                    aria-label="投稿する"
+                >
+                    {isOpen ? "×" : "☕"}
+                </button>
+            )}
 
             {isOpen && (
                 <div
