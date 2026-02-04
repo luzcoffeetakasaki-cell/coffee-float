@@ -41,8 +41,13 @@ export default function FloatingArea() {
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+    const [isLoadingUser, setIsLoadingUser] = useState(true);
+
     useEffect(() => {
-        getCurrentUserId().then(setCurrentUserId);
+        getCurrentUserId().then(id => {
+            setCurrentUserId(id);
+            setIsLoadingUser(false);
+        });
     }, []);
 
     useEffect(() => {
@@ -80,7 +85,7 @@ export default function FloatingArea() {
     return (
         <>
             <div className="floating-layer">
-                {posts.map((post, index) => (
+                {!isLoadingUser && posts.map((post, index) => (
                     <Bubble
                         key={post.id}
                         post={post}
