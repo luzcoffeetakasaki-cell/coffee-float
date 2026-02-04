@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, AnimatePresence } from "framer-motion";
 import { getCurrentUserId } from "@/lib/auth";
 import { TRIVIA_POSTS } from "@/data/triviaPosts";
 
@@ -42,6 +42,7 @@ export default function FloatingArea() {
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     const [isLoadingUser, setIsLoadingUser] = useState(true);
+    const [viewMode, setViewMode] = useState<"float" | "timeline">("float");
 
     useEffect(() => {
         getCurrentUserId().then(id => {
@@ -84,20 +85,183 @@ export default function FloatingArea() {
 
     return (
         <>
-            <div className="floating-layer">
-                {!isLoadingUser && posts.map((post, index) => (
-                    <Bubble
-                        key={post.id}
-                        post={post}
-                        index={index}
-                        onClick={() => setSelectedPost(post)}
-                        isMine={currentUserId === post.userId}
-                    />
-                ))}
+            {/* View Mode Toggle */}
+            <div style={{
+                position: "fixed",
+                top: "calc(6rem + var(--safe-top))",
+                right: "1.5rem",
+                zIndex: 50,
+                display: "flex",
+                background: "rgba(30, 20, 15, 0.6)",
+                backdropFilter: "blur(10px)",
+                padding: "0.3rem",
+                borderRadius: "2rem",
+                border: "1px solid rgba(198, 166, 100, 0.2)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+            }}>
+                <button
+                    onClick={() => setViewMode("float")}
+                    style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "1.5rem",
+                        border: "none",
+                        background: viewMode === "float" ? "var(--accent-gold)" : "transparent",
+                        color: viewMode === "float" ? "#1e0f0a" : "white",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease"
+                    }}
+                >
+                    Float 🫧
+                </button>
+                <button
+                    onClick={() => setViewMode("timeline")}
+                    style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "1.5rem",
+                        border: "none",
+                        background: viewMode === "timeline" ? "var(--accent-gold)" : "transparent",
+                        color: viewMode === "timeline" ? "#1e0f0a" : "white",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease"
+                    }}
+                >
+                    Timeline 📜
+                </button>
+            </div>
+
+            <div style={{
+                width: "100%",
+                height: "100%",
+                overflowY: viewMode === "timeline" ? "auto" : "hidden",
+                paddingTop: viewMode === "timeline" ? "9rem" : "0",
+                paddingBottom: viewMode === "timeline" ? "8rem" : "0"
+            }}>
+                <AnimatePresence mode="wait">
+                    {viewMode === "float" ? (
+                        <motion.div
+                            key="float"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="floating-layer"
+                            style={{ position: "relative", width: "100%", height: "100%" }}
+                        >
+                            {!isLoadingUser && posts.map((post, index) => (
+                                <Bubble
+                                    key={post.id}
+                                    post={post}
+                                    index={index}
+                                    onClick={() => setSelectedPost(post)}
+                                    isMine={currentUserId === post.userId}
+                                />
+                            ))}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="timeline"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            style={{ padding: "0 1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}
+                        >
+                            {posts.map((post) => (
+                                <TimelineCard
+                                    key={post.id}
+                                    post={post}
+                                    onClick={() => setSelectedPost(post)}
+                                    isMine={currentUserId === post.userId}
+                                />
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
         </>
+    );
+}
+
+function TimelineCard({ post, onClick, isMine }: { post: Post; onClick: () => void; isMine: boolean }) {
+    const isTrivia = post.userId === "master";
+    const stamp = !isTrivia && post.flavorStamp ? STAMPS[post.flavorStamp] : null;
+
+    return (
+        <motion.div
+            onClick={onClick}
+            whileTap={{ scale: 0.98 }}
+            style={{
+                background: isMine
+                    ? "linear-gradient(135deg, rgba(198, 166, 100, 0.15) 0%, rgba(30, 20, 15, 0.4) 100%)"
+                    : "rgba(255, 255, 255, 0.05)",
+                borderRadius: "1.5rem",
+                padding: "1.2rem",
+                border: isMine ? "1px solid rgba(198, 166, 100, 0.3)" : "1px solid rgba(255, 255, 255, 0.1)",
+                display: "flex",
+                gap: "1rem",
+                alignItems: "center",
+                cursor: "pointer",
+                boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.1)" : "none"
+            }}
+        >
+            <div style={{
+                fontSize: "2rem",
+                width: "3.5rem",
+                height: "3.5rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(0,0,0,0.2)",
+                borderRadius: "1rem",
+                flexShrink: 0
+            }}>
+                {stamp ? stamp.icon : isTrivia ? "🎓" : "☕️"}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.2rem" }}>
+                    <h4 style={{
+                        fontSize: "1rem",
+                        color: isMine ? "var(--accent-gold)" : "white",
+                        fontWeight: "bold",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                    }}>
+                        {post.coffeeName}
+                    </h4>
+                    <span style={{ fontSize: "0.7rem", opacity: 0.5, whiteSpace: "nowrap", marginLeft: "0.5rem" }}>
+                        {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleTimeString("ja-JP", { hour: '2-digit', minute: '2-digit' }) : "たった今"}
+                    </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", opacity: 0.7, marginBottom: "0.5rem" }}>
+                    <span>{post.nickname || "名無しのコーヒー好き"}</span>
+                    {post.location && (
+                        <>
+                            <span>/</span>
+                            <span>📍 {post.location}</span>
+                        </>
+                    )}
+                </div>
+                <p style={{
+                    fontSize: "0.85rem",
+                    opacity: 0.9,
+                    lineHeight: "1.4",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden"
+                }}>
+                    {post.flavorText}
+                </p>
+            </div>
+            <div style={{ padding: "0.5rem", opacity: 0.3 }}>
+                <span style={{ fontSize: "1.2rem" }}>›</span>
+            </div>
+        </motion.div>
     );
 }
 
