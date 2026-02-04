@@ -7,7 +7,7 @@ import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { login } from "@/lib/liff";
 import { writeBatch, getDocs } from "firebase/firestore";
 import { usePWA } from "@/hooks/usePWA";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import DetailModal from "./DetailModal";
 
 interface Post {
@@ -47,6 +47,14 @@ const FLAVOR_KEYWORDS: Record<string, { category: string; keywords: string[]; ic
     ROASTY: { category: "ロースティー/ナッツ", keywords: ["香ばしい", "ナッツ", "スモーキー", "苦味", "アーモンド", "深み", "焙煎"], icon: "🌰", color: "#A67C52" },
 };
 
+const MOOD_REC_MAP: Record<string, { beans: string; roast: string; trait: string; advice: string; icon: string }> = {
+    "疲れた": { beans: "ブラジル・ショコラ", roast: "深煎り", trait: "チョコレートのような甘みと深いコク", advice: "頑張った自分を、どっしりとしたコクで包み込んで。ミルクをたっぷり入れても最高だよ！", icon: "🥱" },
+    "スッキリ": { beans: "エチオピア・イルガチェフェ", roast: "浅煎り", trait: "紅茶のような香りとレモンのような爽やかさ", advice: "澄み渡るような香りで、気分をリセット！アイスコーヒーにするとさらにクリアに。", icon: "✨" },
+    "集中したい": { beans: "ケニア", roast: "中深煎り", trait: "力強いボティとベリー系の鮮やかな酸味", advice: "キレのある酸味が脳をシャキッとさせてくれるはず。作業のお供にはブラックがおすすめ！", icon: "💻" },
+    "幸せ": { beans: "コスタリカ・ハニー", roast: "中煎り", trait: "ハチミツを思わせる優しい甘みと華やかな香り", advice: "今のマスターのハッピーな気分を、もっと甘く華やかに彩ってくれること間違いなし！", icon: "🥰" },
+    "リラックス": { beans: "グアテマラ", roast: "中煎り", trait: "チョコレートやナッツの香ばしさとバランスの良さ", advice: "お気に入りの音楽を聴きながら、ゆっくりと時間をかけて味わって。ホッと一息つけるよ。", icon: "🌿" },
+};
+
 export default function CoffeeLog() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -57,6 +65,11 @@ export default function CoffeeLog() {
     const [nickname, setNickname] = useState("");
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [isEditingName, setIsEditingName] = useState(false);
+
+    // Mood Rec States
+    const [moodQuery, setMoodQuery] = useState("");
+    const [recommendation, setRecommendation] = useState<typeof MOOD_REC_MAP[keyof typeof MOOD_REC_MAP] | null>(null);
+    const [isAnalysing, setIsAnalysing] = useState(false);
     const isPWA = usePWA();
 
     useEffect(() => {
@@ -204,6 +217,28 @@ export default function CoffeeLog() {
     };
 
     const topStamp = Object.entries(stats).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    const handleGetRecommendation = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!moodQuery.trim()) return;
+
+        setIsAnalysing(true);
+        setRecommendation(null);
+
+        // シンプルなキーワードマッチング
+        let selectedKey = "リラックス"; // デフォルト
+        for (const key in MOOD_REC_MAP) {
+            if (moodQuery.includes(key) || key.includes(moodQuery)) {
+                selectedKey = key;
+                break;
+            }
+        }
+
+        setTimeout(() => {
+            setRecommendation(MOOD_REC_MAP[selectedKey]);
+            setIsAnalysing(false);
+        }, 1500); // 分析中の演出
+    };
 
     return (
         <div style={{
@@ -378,6 +413,116 @@ export default function CoffeeLog() {
                                     すべて既読にする
                                 </button>
                             )}
+                        </div>
+                    </section>
+
+                    {/* ムード・ペアリングセクション */}
+                    <section style={{ marginBottom: "2rem" }}>
+                        <div className="glass-panel" style={{
+                            padding: "1.5rem",
+                            borderRadius: "1.5rem",
+                            background: "linear-gradient(135deg, rgba(198, 166, 100, 0.1) 0%, rgba(30, 20, 15, 0.4) 100%)",
+                            border: "1px solid rgba(198, 166, 100, 0.2)"
+                        }}>
+                            <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem", color: "var(--accent-gold)" }}>Mood Pairing 🧠💭</h3>
+                            <p style={{ fontSize: "0.8rem", opacity: 0.7, marginBottom: "1.2rem" }}>今の気分にぴったりの一杯を提案するよ。</p>
+
+                            <form onSubmit={handleGetRecommendation} style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                                <input
+                                    placeholder="例: スッキリしたい、疲れた..."
+                                    value={moodQuery}
+                                    onChange={(e) => setMoodQuery(e.target.value)}
+                                    style={{
+                                        flex: 1,
+                                        padding: "0.8rem 1rem",
+                                        borderRadius: "0.8rem",
+                                        background: "rgba(0,0,0,0.3)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        color: "white",
+                                        fontSize: "0.9rem",
+                                        outline: "none"
+                                    }}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isAnalysing}
+                                    style={{
+                                        padding: "0.8rem 1.2rem",
+                                        borderRadius: "0.8rem",
+                                        background: "var(--accent-gold)",
+                                        border: "none",
+                                        color: "var(--bg-deep)",
+                                        fontWeight: "bold",
+                                        cursor: "pointer",
+                                        opacity: isAnalysing ? 0.6 : 1
+                                    }}
+                                >
+                                    {isAnalysing ? "分析中..." : "診断 ✨"}
+                                </button>
+                            </form>
+
+                            <AnimatePresence mode="wait">
+                                {isAnalysing && (
+                                    <motion.div
+                                        key="analysing"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        style={{ textAlign: "center", padding: "1rem" }}
+                                    >
+                                        <div style={{ fontSize: "2rem", marginBottom: "1rem", animation: "spin 2s linear infinite" }}>⏳</div>
+                                        <p style={{ fontSize: "0.85rem", opacity: 0.8 }}>今のマスターに合う魔法の一杯を抽出中...</p>
+                                    </motion.div>
+                                )}
+
+                                {recommendation && !isAnalysing && (
+                                    <motion.div
+                                        key="result"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        style={{
+                                            background: "rgba(255,255,255,0.05)",
+                                            padding: "1.2rem",
+                                            borderRadius: "1rem",
+                                            border: "1px solid rgba(198, 166, 100, 0.3)"
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1rem" }}>
+                                            <div style={{ fontSize: "2.5rem" }}>{recommendation.icon}</div>
+                                            <div>
+                                                <div style={{ fontSize: "0.75rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "1px", marginBottom: "0.2rem" }}>RECOMMENDED BEANS</div>
+                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "white" }}>{recommendation.beans}</div>
+                                                <div style={{ fontSize: "0.8rem", opacity: 0.6 }}>Roast: {recommendation.roast}</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ fontSize: "0.85rem", background: "rgba(0,0,0,0.2)", padding: "0.8rem", borderRadius: "0.6rem", marginBottom: "1rem", borderLeft: "3px solid var(--accent-gold)" }}>
+                                            <strong>特徴:</strong> {recommendation.trait}
+                                        </div>
+                                        <p style={{ fontSize: "0.85rem", lineHeight: "1.6", opacity: 0.9 }}>
+                                            {recommendation.advice}
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setRecommendation(null);
+                                                setMoodQuery("");
+                                            }}
+                                            style={{
+                                                marginTop: "1.2rem",
+                                                width: "100%",
+                                                padding: "0.5rem",
+                                                background: "none",
+                                                border: "1px solid rgba(255,255,255,0.1)",
+                                                borderRadius: "0.5rem",
+                                                color: "rgba(255,255,255,0.4)",
+                                                fontSize: "0.75rem",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            入力をリセット
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </section>
 
