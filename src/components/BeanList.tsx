@@ -345,6 +345,7 @@ export default function BeanList() {
                                         fontSize: "0.85rem",
                                         color: daysSince < 14 ? "#4CAF50" : daysSince < 30 ? "#FFC107" : "#FF5722"
                                     }}>
+                                        {daysSince}日経過
                                     </div>
                                 </div>
 
