@@ -294,7 +294,7 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
                             <div style={{ flex: 1.5 }}>
                                 <input
                                     type="text"
-                                    placeholder="生産地 (例 🇪🇹)"
+                                    placeholder="生産国"
                                     value={coffeeOrigin}
                                     onChange={(e) => setCoffeeOrigin(e.target.value)}
                                     style={inputStyle}
