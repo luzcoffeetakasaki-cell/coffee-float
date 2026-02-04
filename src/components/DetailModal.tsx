@@ -37,6 +37,7 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
 
     const [particles, setParticles] = useState<{ id: number; x: number; y: number; icon: string }[]>([]);
     const [currentLikes, setCurrentLikes] = useState(post.likes);
+    const isTrivia = post.userId === "master";
 
     // 編集・削除用ステート
     const [isOwner, setIsOwner] = useState(false);
@@ -249,30 +250,49 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                 </div>
 
                 <div style={{ marginBottom: "0.5rem", opacity: 0.7, fontSize: "0.8rem" }}>
-                    {dateStr}
-                    {isEditing ? (
-                        <span style={{ marginLeft: "0.5rem" }}>
-                            @ <input
-                                value={editLocation}
-                                onChange={(e) => setEditLocation(e.target.value)}
-                                placeholder="場所"
-                                style={{
-                                    background: "rgba(255,255,255,0.1)",
-                                    border: "none",
-                                    color: "white",
-                                    padding: "0.2rem",
-                                    borderRadius: "4px",
-                                    fontSize: "0.8rem",
-                                    width: "120px"
-                                }}
-                            />
-                        </span>
-                    ) : (
-                        ` @ ${post.location || "どこか"}`
+                    {!isTrivia && (
+                        <>
+                            {dateStr}
+                            {isEditing ? (
+                                <span style={{ marginLeft: "0.5rem" }}>
+                                    @ <input
+                                        value={editLocation}
+                                        onChange={(e) => setEditLocation(e.target.value)}
+                                        placeholder="場所"
+                                        style={{
+                                            background: "rgba(255,255,255,0.1)",
+                                            border: "none",
+                                            color: "white",
+                                            padding: "0.2rem",
+                                            borderRadius: "4px",
+                                            fontSize: "0.8rem",
+                                            width: "120px"
+                                        }}
+                                    />
+                                </span>
+                            ) : (
+                                ` @ ${post.location || "どこか"}`
+                            )}
+                        </>
                     )}
                 </div>
 
-                {isEditing ? (
+                {isTrivia ? (
+                    /* 雑学タグ */
+                    <div style={{
+                        display: "inline-block",
+                        padding: "0.4rem 1rem",
+                        borderRadius: "1rem",
+                        fontSize: "0.85rem",
+                        fontWeight: "bold",
+                        backgroundColor: "rgba(198, 166, 100, 0.15)",
+                        color: "var(--accent-gold)",
+                        border: "1px solid rgba(198, 166, 100, 0.4)",
+                        marginBottom: "1rem"
+                    }}>
+                        💡 豆知識
+                    </div>
+                ) : isEditing ? (
                     <div style={{ marginBottom: "1rem" }}>
                         {Object.entries(STAMPS).map(([key, s]) => (
                             <button
@@ -402,98 +422,103 @@ export default function DetailModal({ post, onClose }: DetailModalProps) {
                     </div>
                 ) : (
                     <>
-                        <div style={{ textAlign: "right", opacity: 0.8, marginBottom: "2rem" }}>
-                            — {post.nickname}
-                        </div>
+                        {!isTrivia && (
+                            <>
+                                <div style={{ textAlign: "right", opacity: 0.8, marginBottom: "2rem" }}>
+                                    — {post.nickname}
+                                </div>
 
-                        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", position: "relative" }}>
-                            <AnimatePresence>
-                                {particles.map((p) => (
-                                    <motion.div
-                                        key={p.id}
-                                        initial={{ opacity: 1, y: 0, x: p.x, scale: 0.5 }}
-                                        animate={{ opacity: 0, y: -100, scale: 1.5 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 1 }}
+                                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", position: "relative" }}>
+                                    <AnimatePresence>
+                                        {particles.map((p) => (
+                                            <motion.div
+                                                key={p.id}
+                                                initial={{ opacity: 1, y: 0, x: p.x, scale: 0.5 }}
+                                                animate={{ opacity: 0, y: -100, scale: 1.5 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 1 }}
+                                                style={{
+                                                    position: "absolute",
+                                                    top: 0,
+                                                    left: "50%",
+                                                    fontSize: "1.5rem",
+                                                    pointerEvents: "none",
+                                                    zIndex: 10
+                                                }}
+                                                onAnimationComplete={() => setParticles(prev => prev.filter(i => i.id !== p.id))}
+                                            >
+                                                {p.icon}
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
+                                    <motion.button
+                                        onClick={handleCheers}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.9 }}
                                         style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            left: "50%",
-                                            fontSize: "1.5rem",
-                                            pointerEvents: "none",
-                                            zIndex: 10
+                                            padding: "0.8rem 2rem",
+                                            borderRadius: "2rem",
+                                            border: "none",
+                                            backgroundColor: "var(--accent-gold)",
+                                            color: "#000",
+                                            cursor: "pointer",
+                                            fontSize: "1.2rem",
+                                            fontWeight: "bold",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.5rem",
+                                            boxShadow: "0 4px 15px rgba(198, 166, 100, 0.4)",
+                                            outline: "none"
                                         }}
-                                        onAnimationComplete={() => setParticles(prev => prev.filter(i => i.id !== p.id))}
                                     >
-                                        {p.icon}
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                            <motion.button
-                                onClick={handleCheers}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.9 }}
-                                style={{
-                                    padding: "0.8rem 2rem",
-                                    borderRadius: "2rem",
-                                    border: "none",
-                                    backgroundColor: "var(--accent-gold)",
-                                    color: "#000",
-                                    cursor: "pointer",
-                                    fontSize: "1.2rem",
-                                    fontWeight: "bold",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                    boxShadow: "0 4px 15px rgba(198, 166, 100, 0.4)",
-                                    outline: "none"
-                                }}
-                            >
-                                🥂 乾杯！ ({currentLikes || 0})
-                            </motion.button>
-                        </div>
+                                        🥂 乾杯！ ({currentLikes || 0})
+                                    </motion.button>
+                                </div>
 
-                        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1.5rem" }}>
-                            <button
-                                onClick={handleShare}
-                                style={{
-                                    padding: "0.8rem 2rem",
-                                    borderRadius: "2rem",
-                                    border: "none",
-                                    backgroundColor: "rgba(255,255,255,0.1)",
-                                    color: "var(--text-main)",
-                                    cursor: "pointer",
-                                    fontSize: "1rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                    transition: "background 0.2s"
-                                }}
-                            >
-                                📤 シェアする
-                            </button>
-                            <a
-                                href={`https://line.me/R/msg/text/?${encodeURIComponent(`${post.coffeeName} #CoffeeFloat\n${SHARE_BASE_URL}/${post.id}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    padding: "0.8rem 2rem",
-                                    borderRadius: "2rem",
-                                    border: "none",
-                                    backgroundColor: "#06C755", // LINE Green
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontSize: "1rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                }}
-                            >
-                                LINEで送る
-                            </a>
-                        </div>
+                                <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1.5rem" }}>
+                                    <button
+                                        onClick={handleShare}
+                                        style={{
+                                            padding: "0.8rem 2rem",
+                                            borderRadius: "2rem",
+                                            border: "none",
+                                            backgroundColor: "rgba(255,255,255,0.1)",
+                                            color: "var(--text-main)",
+                                            cursor: "pointer",
+                                            fontSize: "1rem",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.5rem",
+                                            transition: "background 0.2s"
+                                        }}
+                                    >
+                                        📤 シェアする
+                                    </button>
+                                    <a
+                                        href={`https://line.me/R/msg/text/?${encodeURIComponent(`${post.coffeeName} #CoffeeFloat\n${SHARE_BASE_URL}/${post.id}`)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            padding: "0.8rem 2rem",
+                                            borderRadius: "2rem",
+                                            border: "none",
+                                            backgroundColor: "#06C755", // LINE Green
+                                            color: "white",
+                                            textDecoration: "none",
+                                            fontSize: "1rem",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.5rem",
+                                        }}
+                                    >
+                                        LINEで送る
+                                    </a>
+                                </div>
+                            </>
+                        )}
                     </>
                 )}
+
             </div>
         </div>
     );
