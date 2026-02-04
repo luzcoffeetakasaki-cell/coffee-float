@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { getCurrentUserId } from "@/lib/auth";
 import { checkNgWords } from "@/lib/filter";
 import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostForm() {
     const searchParams = useSearchParams();
@@ -19,6 +20,7 @@ export default function PostForm() {
     const [aging, setAging] = useState<number | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
 
     const STAMPS = [
@@ -138,18 +140,24 @@ export default function PostForm() {
                 likes: 0,
                 createdAt: serverTimestamp(),
             });
-            // フォームをリセット
-            setCoffeeName("");
-            setLocation("");
-            setFlavorText("");
-            setFlavorStamp(null);
-            setIsFavorite(false);
-            setAging(null);
-            setIsOpen(false);
+
+            // 成功演出
+            setIsSuccess(true);
+
+            // 演出後にリセット
+            setTimeout(() => {
+                setCoffeeName("");
+                setLocation("");
+                setFlavorText("");
+                setFlavorStamp(null);
+                setIsFavorite(false);
+                setAging(null);
+                setIsOpen(false);
+                setIsSuccess(false);
+            }, 2000);
         } catch (error) {
             console.error("Error adding document: ", error);
             alert("投稿に失敗しちゃったみたい...");
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -314,24 +322,74 @@ export default function PostForm() {
                                 {ngWarning}
                             </div>
                         )}
-                        <button
+                        <motion.button
                             type="submit"
                             disabled={isSubmitting}
+                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.02 }}
                             style={{
                                 width: "100%",
                                 padding: "0.8rem",
                                 borderRadius: "0.8rem",
                                 border: "none",
-                                backgroundColor: "var(--accent-gold)",
-                                color: "var(--bg-deep)",
+                                backgroundColor: isSuccess ? "#4CAF50" : "var(--accent-gold)",
+                                color: isSuccess ? "white" : "var(--bg-deep)",
                                 fontWeight: "bold",
                                 cursor: "pointer",
-                                opacity: isSubmitting ? 0.7 : 1,
+                                opacity: isSubmitting && !isSuccess ? 0.7 : 1,
+                                transition: "background-color 0.3s"
                             }}
                         >
-                            {isSubmitting ? "送信中..." : "投稿する ✨"}
-                        </button>
+                            {isSuccess ? "投稿完了！ ✨" : isSubmitting ? "送信中..." : "投稿する ✨"}
+                        </motion.button>
                     </form>
+
+                    <AnimatePresence>
+                        {isSuccess && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0 }}
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    background: "rgba(30, 20, 15, 0.95)",
+                                    borderRadius: "1.5rem",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    zIndex: 10,
+                                    backdropFilter: "blur(10px)"
+                                }}
+                            >
+                                <motion.div
+                                    initial={{ y: 20 }}
+                                    animate={{ y: 0 }}
+                                    transition={{ type: "spring", bounce: 0.5 }}
+                                    style={{ fontSize: "4rem", marginBottom: "1rem" }}
+                                >
+                                    ☕️✨
+                                </motion.div>
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                    style={{ fontWeight: "bold", color: "var(--accent-gold)" }}
+                                >
+                                    It's a Perfect Coffee!
+                                </motion.p>
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    style={{ fontSize: "0.8rem", marginTop: "0.5rem", opacity: 0.7 }}
+                                >
+                                    素敵なコーヒータイムを。
+                                </motion.p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             )}
         </>
