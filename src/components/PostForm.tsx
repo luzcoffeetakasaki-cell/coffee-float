@@ -26,7 +26,7 @@ export default function PostForm() {
         { label: "FLORAL", color: "#B39DDB", icon: "🌸" },
     ];
 
-    // URLパラメータの取得 & ニックネームの読み込み
+    // URLパラメータの取得 & ニックネームの読み込み & イベントリスナー
     useEffect(() => {
         const savedNickname = localStorage.getItem("coffee_float_nickname");
         if (savedNickname) {
@@ -38,6 +38,16 @@ export default function PostForm() {
             setUserId(id);
         };
         fetchProfile();
+
+        // 豆リストからの自動入力イベント
+        const handleOpenPost = (e: any) => {
+            const { coffeeName, location } = e.detail;
+            setCoffeeName(coffeeName || "");
+            setLocation(location || "");
+            setIsOpen(true);
+        };
+
+        window.addEventListener("coffee-float:open-post", handleOpenPost);
 
         // ?cafe=店舗名 があれば自動入力
         const getCafeFromUrl = () => {
@@ -57,8 +67,15 @@ export default function PostForm() {
             const timer = setTimeout(() => {
                 setIsOpen(true);
             }, 500);
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener("coffee-float:open-post", handleOpenPost);
+            };
         }
+
+        return () => {
+            window.removeEventListener("coffee-float:open-post", handleOpenPost);
+        };
     }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,9 +10,10 @@ import { writeBatch, getDocs } from "firebase/firestore";
 interface Bean {
     id: string;
     name: string;
-    origin: string; // 生産地
-    process: string; // 精製方法
-    roastDate: string; // 焙煎日 (YYYY-MM-DD string for easy input handling)
+    shopName?: string; // 購入店舗
+    origin?: string; // 生産地
+    process?: string; // 精製方法
+    roastDate: string; // 焙煎日
     createdAt: Timestamp;
 }
 
@@ -24,6 +25,7 @@ export default function BeanList() {
 
     // Form State
     const [name, setName] = useState("");
+    const [shopName, setShopName] = useState("");
     const [origin, setOrigin] = useState("");
     const [process, setProcess] = useState("");
     const [roastDate, setRoastDate] = useState("");
@@ -34,7 +36,6 @@ export default function BeanList() {
                 const id = await getCurrentUserId();
                 setUserId(id);
 
-                // データ移行（ゲストID -> LINE ID）のチェック
                 const storedGuestId = getStoredDeviceId();
                 if (id && !isGuestUserId(id) && storedGuestId && isGuestUserId(storedGuestId)) {
                     migrateGuestData(storedGuestId, id);
@@ -61,44 +62,32 @@ export default function BeanList() {
                 batch.update(docSnap.ref, { userId: lineId });
             });
             await batch.commit();
-            console.log(`Migrated ${snapshot.size} beans from ${guestId} to ${lineId}`);
         } catch (error) {
             console.error("Migration failed", error);
         }
     };
 
     useEffect(() => {
-        console.log("Current UserId in BeanList:", userId);
-    }, [userId]);
-
-    useEffect(() => {
         if (!userId) return;
 
-        console.log("Starting Bean listener for:", userId);
         const q = query(
             collection(db, "beans"),
             where("userId", "==", userId)
-            // orderByを外してインデックス不足による同期不全を回避
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            console.log("Bean Snapshot received, count:", snapshot.size);
             const newBeans = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
             })) as Bean[];
 
-            // 手動でソート
-            newBeans.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+            newBeans.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
 
             setBeans(newBeans);
             setLoading(false);
         }, (error) => {
             console.error("Bean listener failed:", error);
             setLoading(false);
-            if (error.code === "failed-precondition") {
-                console.warn("Firestore index might be missing for beans collection.");
-            }
         });
 
         return () => unsubscribe();
@@ -112,14 +101,15 @@ export default function BeanList() {
             await addDoc(collection(db, "beans"), {
                 userId,
                 name,
-                origin,
-                process,
+                shopName: shopName || "",
+                origin: origin || "",
+                process: process || "",
                 roastDate,
                 createdAt: Timestamp.now(),
             });
             setIsAdding(false);
-            // Reset form
             setName("");
+            setShopName("");
             setOrigin("");
             setProcess("");
             setRoastDate("");
@@ -138,13 +128,23 @@ export default function BeanList() {
         }
     };
 
+    const handlePostFromBean = (bean: Bean) => {
+        // カスタムイベントを発火して、PostFormにデータを渡す
+        const event = new CustomEvent("coffee-float:open-post", {
+            detail: {
+                coffeeName: bean.name,
+                location: bean.shopName || ""
+            }
+        });
+        window.dispatchEvent(event);
+    };
+
     const calculateDaysSinceRoast = (dateStr: string) => {
         const roast = new Date(dateStr);
         const today = new Date();
         const oneDay = 24 * 60 * 60 * 1000;
         const roastDateOnly = new Date(roast.getFullYear(), roast.getMonth(), roast.getDate());
         const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
         const diff = Math.round((todayDateOnly.getTime() - roastDateOnly.getTime()) / oneDay);
         return diff;
     };
@@ -199,12 +199,21 @@ export default function BeanList() {
                     >
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <div>
-                                <label style={{ display: "block", fontSize: "0.8rem", marginBottom: "0.3rem", opacity: 0.8 }}>豆の名前 *</label>
+                                <label style={{ display: "block", fontSize: "0.8rem", marginBottom: "0.3rem", opacity: 0.8 }}>コーヒー名 *</label>
                                 <input
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="例：エチオピア イルガチェフェ"
+                                    style={inputStyle}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: "block", fontSize: "0.8rem", marginBottom: "0.3rem", opacity: 0.8 }}>買ったお店</label>
+                                <input
+                                    value={shopName}
+                                    onChange={(e) => setShopName(e.target.value)}
+                                    placeholder="例：Luz Coffee"
                                     style={inputStyle}
                                 />
                             </div>
@@ -283,26 +292,25 @@ export default function BeanList() {
                                     position: "relative"
                                 }}
                             >
-                                <button
-                                    onClick={() => handleDelete(bean.id)}
-                                    style={{
-                                        position: "absolute",
-                                        top: "1rem",
-                                        right: "1rem",
-                                        background: "none",
-                                        border: "none",
-                                        color: "rgba(255,255,255,0.3)",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    🗑️
-                                </button>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                                    <h3 style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#f0e6d2", paddingRight: "2rem" }}>
+                                        {bean.name}
+                                    </h3>
+                                    <button
+                                        onClick={() => handleDelete(bean.id)}
+                                        style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer" }}
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
 
-                                <h3 style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#f0e6d2", marginBottom: "0.5rem", paddingRight: "2rem" }}>
-                                    {bean.name}
-                                </h3>
+                                {bean.shopName && (
+                                    <div style={{ fontSize: "0.85rem", color: "var(--accent-gold)", marginBottom: "0.5rem", opacity: 0.9 }}>
+                                        🏪 {bean.shopName}
+                                    </div>
+                                )}
 
-                                <div style={{ display: "flex", gap: "0.8rem", fontSize: "0.8rem", opacity: 0.8, marginBottom: "0.8rem" }}>
+                                <div style={{ display: "flex", gap: "0.8rem", fontSize: "0.75rem", opacity: 0.7, marginBottom: "0.8rem" }}>
                                     {bean.origin && <span>📍 {bean.origin}</span>}
                                     {bean.process && <span>⚙️ {bean.process}</span>}
                                 </div>
@@ -315,16 +323,35 @@ export default function BeanList() {
                                     justifyContent: "space-between",
                                     alignItems: "center"
                                 }}>
-                                    <div style={{ fontSize: "0.8rem", opacity: 0.7 }}>
+                                    <div style={{ fontSize: "0.75rem", opacity: 0.7 }}>
                                         焙煎日: {bean.roastDate}
                                     </div>
                                     <div style={{
                                         fontWeight: "bold",
+                                        fontSize: "0.85rem",
                                         color: daysSince < 14 ? "#4CAF50" : daysSince < 30 ? "#FFC107" : "#FF5722"
                                     }}>
                                         {daysSince}日経過
                                     </div>
                                 </div>
+
+                                <button
+                                    onClick={() => handlePostFromBean(bean)}
+                                    style={{
+                                        width: "100%",
+                                        marginTop: "1rem",
+                                        padding: "0.6rem",
+                                        borderRadius: "0.5rem",
+                                        border: "1px solid rgba(198, 166, 100, 0.3)",
+                                        background: "rgba(198, 166, 100, 0.1)",
+                                        color: "var(--accent-gold)",
+                                        fontSize: "0.8rem",
+                                        fontWeight: "bold",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    ✍️ 感想をシェアする
+                                </button>
                             </motion.div>
                         );
                     })}
