@@ -20,7 +20,9 @@ export default function PostForm() {
     const [aging, setAging] = useState<number | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false); // Renamed from isSuccess
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [lastSharedData, setLastSharedData] = useState<any>(null);
     const [recentLocations, setRecentLocations] = useState<string[]>([]);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
 
@@ -112,6 +114,20 @@ export default function PostForm() {
         };
     }, [searchParams]);
 
+    const handleCloseModalAndReset = () => {
+        setCoffeeName("");
+        setLocation("");
+        setFlavorText("");
+        setFlavorStamp(null);
+        setIsFavorite(false);
+        setAging(null);
+        setIsOpen(false);
+        setShowSuccess(false);
+        setShowShareModal(false);
+        setIsSubmitting(false);
+        setLastSharedData(null);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!coffeeName || !flavorText) return;
@@ -132,11 +148,7 @@ export default function PostForm() {
                 await new Promise(resolve => setTimeout(resolve, 800)); // 送信中っぽく
                 alert("【デモモード】投稿をシミュレートしました！実際に保存するにはFirebaseの設定が必要です。✨");
                 // フォームリセット
-                setCoffeeName("");
-                setLocation("");
-                setFlavorText("");
-                setFlavorStamp(null);
-                setIsOpen(false);
+                handleCloseModalAndReset();
                 return;
             }
 
@@ -145,7 +157,7 @@ export default function PostForm() {
                 localStorage.setItem("coffee_float_nickname", nickname);
             }
 
-            await addDoc(collection(db, "posts"), {
+            const docData = {
                 userId: userId || "anonymous",
                 nickname: nickname || "名無しのコーヒー好き",
                 coffeeName,
@@ -156,22 +168,18 @@ export default function PostForm() {
                 aging,
                 likes: 0,
                 createdAt: serverTimestamp(),
-            });
+            };
+            await addDoc(collection(db, "posts"), docData);
 
-            // 成功演出
-            setIsSuccess(true);
+            setLastSharedData(docData);
+            setShowSuccess(true);
 
-            // 演出後にリセット
+            // 成功演出後にシェアモーダルを表示
             setTimeout(() => {
-                setCoffeeName("");
-                setLocation("");
-                setFlavorText("");
-                setFlavorStamp(null);
-                setIsFavorite(false);
-                setAging(null);
-                setIsOpen(false);
-                setIsSuccess(false);
-            }, 2000);
+                setShowSuccess(false);
+                setShowShareModal(true);
+            }, 2000); // 成功アニメーションの表示時間
+
         } catch (error) {
             console.error("Error adding document: ", error);
             alert("投稿に失敗しちゃったみたい...");
@@ -374,20 +382,20 @@ export default function PostForm() {
                                 padding: "0.8rem",
                                 borderRadius: "0.8rem",
                                 border: "none",
-                                backgroundColor: isSuccess ? "#4CAF50" : "var(--accent-gold)",
-                                color: isSuccess ? "white" : "var(--bg-deep)",
+                                backgroundColor: showSuccess ? "#4CAF50" : "var(--accent-gold)",
+                                color: showSuccess ? "white" : "var(--bg-deep)",
                                 fontWeight: "bold",
                                 cursor: "pointer",
-                                opacity: isSubmitting && !isSuccess ? 0.7 : 1,
+                                opacity: isSubmitting && !showSuccess ? 0.7 : 1,
                                 transition: "background-color 0.3s"
                             }}
                         >
-                            {isSuccess ? "投稿完了！ ✨" : isSubmitting ? "送信中..." : "投稿する ✨"}
+                            {showSuccess ? "投稿完了！ ✨" : isSubmitting ? "送信中..." : "投稿する ✨"}
                         </motion.button>
                     </form>
 
                     <AnimatePresence>
-                        {isSuccess && (
+                        {showSuccess && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.5 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -434,6 +442,132 @@ export default function PostForm() {
                     </AnimatePresence>
                 </div>
             )}
+            {/* SNS Share Modal */}
+            <AnimatePresence>
+                {showShareModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: "fixed",
+                            inset: 0,
+                            zIndex: 3000,
+                            background: "rgba(0,0,0,0.85)",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "20px",
+                            backdropFilter: "blur(10px)"
+                        }}
+                    >
+                        {/* Insta-style Share Card */}
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            style={{
+                                width: "100%",
+                                maxWidth: "320px",
+                                aspectRatio: "9/16",
+                                background: "linear-gradient(135deg, #2c1a12 0%, #1a0f0a 100%)",
+                                borderRadius: "24px",
+                                border: "1px solid rgba(198, 166, 100, 0.3)",
+                                padding: "40px 24px",
+                                position: "relative",
+                                overflow: "hidden",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                textAlign: "center",
+                                boxShadow: "0 20px 50px rgba(0,0,0,0.5)"
+                            }}
+                        >
+                            {/* Decorative background circle */}
+                            <div style={{
+                                position: "absolute",
+                                top: "-10%",
+                                right: "-10%",
+                                width: "60%",
+                                height: "40%",
+                                background: "radial-gradient(circle, rgba(198, 166, 100, 0.15) 0%, transparent 70%)",
+                                pointerEvents: "none"
+                            }} />
+
+                            <div style={{ fontSize: "3rem", marginBottom: "2rem" }}>☕️</div>
+
+                            <h2 style={{ fontSize: "1.8rem", color: "var(--accent-gold)", marginBottom: "1rem", fontWeight: "bold" }}>
+                                {lastSharedData?.coffeeName}
+                            </h2>
+
+                            <div style={{ fontSize: "1rem", opacity: 0.8, marginBottom: "2.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                📍 {lastSharedData?.location || "Somewhere cozy"}
+                            </div>
+
+                            <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "16px", width: "100%", marginBottom: "auto" }}>
+                                <div style={{ fontSize: "0.8rem", opacity: 0.5, marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "1px" }}>Flavor Profile</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
+                                    {lastSharedData?.flavorStamp}
+                                </div>
+                                <p style={{ fontSize: "0.9rem", opacity: 0.8, lineHeight: "1.6", fontStyle: "italic" }}>
+                                    "{lastSharedData?.flavorText}"
+                                </p>
+                            </div>
+
+                            <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(198, 166, 100, 0.2)", width: "100%" }}>
+                                <div style={{ fontSize: "0.8rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "2px" }}>COFFEE FLOAT</div>
+                                <div style={{ fontSize: "0.6rem", opacity: 0.4, marginTop: "0.4rem" }}>Your Daily Coffee Companion</div>
+                            </div>
+                        </motion.div>
+
+                        {/* Actions */}
+                        <div style={{ marginTop: "30px", width: "100%", maxWidth: "320px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <button
+                                onClick={() => {
+                                    if (navigator.share) {
+                                        navigator.share({
+                                            title: "My Coffee Moment",
+                                            text: `I just had a perfect cup of ${lastSharedData?.coffeeName}! ☕️✨\n#CoffeeFloat #CoffeeLog`,
+                                            url: window.location.href
+                                        }).catch(console.error);
+                                    } else {
+                                        alert("お使いのブラウザは共有機能に対応していません💦 スクリーンショットを撮ってシェアしてね！");
+                                    }
+                                }}
+                                style={{
+                                    width: "100%",
+                                    padding: "16px",
+                                    borderRadius: "12px",
+                                    background: "var(--accent-gold)",
+                                    border: "none",
+                                    color: "#1e0f0a",
+                                    fontWeight: "bold",
+                                    fontSize: "1rem",
+                                    cursor: "pointer",
+                                    boxShadow: "0 10px 20px rgba(198, 166, 100, 0.3)"
+                                }}
+                            >
+                                Instagram Stories にシェア 📸
+                            </button>
+                            <button
+                                onClick={handleCloseModalAndReset}
+                                style={{
+                                    width: "100%",
+                                    padding: "16px",
+                                    borderRadius: "12px",
+                                    background: "rgba(255,255,255,0.1)",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    color: "white",
+                                    fontSize: "0.9rem",
+                                    cursor: "pointer"
+                                }}
+                            >
+                                あとで（閉じる）
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }
