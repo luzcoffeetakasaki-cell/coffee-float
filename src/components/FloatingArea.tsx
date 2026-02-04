@@ -38,9 +38,9 @@ const getRandomTrivia = () => {
 
 export default function FloatingArea() {
     const [posts, setPosts] = useState<Post[]>([]);
+    const [triviaItems, setTriviaItems] = useState<Post[]>([]);
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
     const [viewMode, setViewMode] = useState<"float" | "timeline">("float");
 
@@ -51,20 +51,33 @@ export default function FloatingArea() {
         });
     }, []);
 
+    // 雑学を2件ランダムに取得する関数
+    const refreshTrivia = () => {
+        const shuffled = [...TRIVIA_POSTS].sort(() => 0.5 - Math.random());
+        setTriviaItems(shuffled.slice(0, 2) as any);
+    };
+
+    useEffect(() => {
+        refreshTrivia();
+        // 10分ごとに更新 (600,000ms)
+        const interval = setInterval(refreshTrivia, 600000);
+        return () => clearInterval(interval);
+    }, []);
+
     useEffect(() => {
         // Firebase設定が不完全な場合はデモ用データを表示
         if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
             console.warn("Firebase API Key is missing. Running in DEMO MODE.");
-            setPosts(getRandomTrivia());
+            setPosts(getRandomTrivia() as any);
             return;
         }
 
         try {
-            // 最新50件を取得
+            // 最新15件を取得
             const q = query(
                 collection(db, "posts"),
                 orderBy("createdAt", "desc"),
-                limit(50)
+                limit(15)
             );
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -72,39 +85,15 @@ export default function FloatingArea() {
                     id: doc.id,
                     ...doc.data(),
                 })) as Post[];
-                // データが空の場合は豆知識（Bot）を表示
-                setPosts(newPosts.length > 0 ? newPosts : getRandomTrivia());
+                setPosts(newPosts);
             });
 
             return () => unsubscribe();
         } catch (error) {
             console.error("Firebase connection error. Falling back to DEMO MODE.", error);
-            setPosts(getRandomTrivia());
+            setPosts(getRandomTrivia() as any);
         }
     }, []);
-
-    // 画面中央にスクロール管理
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        if (viewMode === "float") {
-            const centerScroll = () => {
-                if (!containerRef.current) return;
-                const { scrollWidth, scrollHeight, clientWidth, clientHeight } = containerRef.current;
-                containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
-                containerRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
-            };
-
-            // レイアウト確定後に実行
-            requestAnimationFrame(centerScroll);
-            const timer = setTimeout(centerScroll, 100);
-            return () => clearTimeout(timer);
-        } else {
-            // タイムラインモードは左上にリセット
-            containerRef.current.scrollLeft = 0;
-            containerRef.current.scrollTop = 0;
-        }
-    }, [viewMode, posts]); // データ読み込み後やモード切り替え時に実行 
 
     return (
         <>
@@ -157,25 +146,15 @@ export default function FloatingArea() {
             </div>
 
             <div
-                ref={containerRef}
                 style={{
                     width: "100%",
                     height: "100%",
-                    overflow: viewMode === "timeline" ? "auto" : "scroll",
+                    overflow: viewMode === "timeline" ? "auto" : "hidden",
                     paddingTop: viewMode === "timeline" ? "9rem" : "0",
                     paddingBottom: viewMode === "timeline" ? "8rem" : "0",
                     position: "relative",
-                    scrollBehavior: "smooth",
-                    msOverflowStyle: "none",  /* IE and Edge */
-                    scrollbarWidth: "none",  /* Firefox */
                 }}
-                className="hide-scrollbar"
             >
-                <style>{`
-                    .hide-scrollbar::-webkit-scrollbar {
-                        display: none;
-                    }
-                `}</style>
                 <AnimatePresence mode="wait">
                     {viewMode === "float" ? (
                         <motion.div
@@ -185,31 +164,29 @@ export default function FloatingArea() {
                             exit={{ opacity: 0 }}
                             className="floating-layer"
                             style={{
-                                position: "absolute", // Changed from relative to absolute inside scrollable container
-                                width: "300%",
-                                height: "300%",
+                                position: "relative",
+                                width: "100%",
+                                height: "100%",
                                 overflow: "hidden",
-                                pointerEvents: "auto" // Allow bubble clicks
+                                pointerEvents: "auto"
                             }}
                         >
-                            {!isLoadingUser && posts.map((post, index) => {
-                                // 広いキャンバス(300%x300%)の中央付近に集まるようにグリッドを計算
-                                const totalCells = 72; // 6 columns * 12 rows
-                                const offsetIndex = index + Math.floor((totalCells - posts.length) / 2);
+                            {!isLoadingUser && [...posts, ...triviaItems].map((post, index) => {
+                                // 100%の画面内に配置するためのグリッド計算
+                                const columns = 3;
+                                const gridX = index % columns;
+                                const gridY = Math.floor(index / columns);
 
-                                const columns = 6;
-                                const gridX = offsetIndex % columns;
-                                const gridY = Math.floor(offsetIndex / columns) % 12;
-
-                                const offsetX = 20 + Math.random() * 60;
-                                const offsetY = 20 + Math.random() * 60;
+                                // 各セル内での位置を少しランダムに
+                                const offsetX = 15 + Math.random() * 70;
+                                const offsetY = 15 + Math.random() * 70;
 
                                 const left = ((gridX + offsetX / 100) / columns) * 100;
-                                const top = ((gridY + offsetY / 100) / 12) * 100;
+                                const top = ((gridY + offsetY / 100) / 7) * 100; // 最大17個なので6-7行分
 
                                 return (
                                     <Bubble
-                                        key={post.id}
+                                        key={post.id + index}
                                         post={post}
                                         index={index}
                                         initialLeft={`${left}%`}
@@ -228,7 +205,11 @@ export default function FloatingArea() {
                             exit={{ opacity: 0, y: -20 }}
                             style={{ padding: "0 1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}
                         >
-                            {posts.map((post) => (
+                            {[...posts, ...triviaItems].sort((a, b) => {
+                                const timeA = a.createdAt?.toMillis?.() || 0;
+                                const timeB = b.createdAt?.toMillis?.() || 0;
+                                return timeB - timeA;
+                            }).map((post) => (
                                 <TimelineCard
                                     key={post.id}
                                     post={post}
