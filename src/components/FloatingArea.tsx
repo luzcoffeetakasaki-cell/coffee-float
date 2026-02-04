@@ -83,14 +83,28 @@ export default function FloatingArea() {
         }
     }, []);
 
-    // 画面中央にスクロール
+    // 画面中央にスクロール管理
     useEffect(() => {
-        if (viewMode === "float" && containerRef.current) {
-            const { scrollWidth, scrollHeight, clientWidth, clientHeight } = containerRef.current;
-            containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
-            containerRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
+        if (!containerRef.current) return;
+
+        if (viewMode === "float") {
+            const centerScroll = () => {
+                if (!containerRef.current) return;
+                const { scrollWidth, scrollHeight, clientWidth, clientHeight } = containerRef.current;
+                containerRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
+                containerRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
+            };
+
+            // レイアウト確定後に実行
+            requestAnimationFrame(centerScroll);
+            const timer = setTimeout(centerScroll, 100);
+            return () => clearTimeout(timer);
+        } else {
+            // タイムラインモードは左上にリセット
+            containerRef.current.scrollLeft = 0;
+            containerRef.current.scrollTop = 0;
         }
-    }, [viewMode, posts]); // データ読み込み後やモード切り替え時に中央へ 
+    }, [viewMode, posts]); // データ読み込み後やモード切り替え時に実行 
 
     return (
         <>
