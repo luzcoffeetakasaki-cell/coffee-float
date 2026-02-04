@@ -56,9 +56,6 @@ const STAMPS: Record<string, { color: string; icon: string; message: string }> =
     JUICY: { color: "#FFB347", icon: "🍊", message: "あなたは冒険心あふれるフルーティー派。新しい発見や驚きを求めて、毎日を鮮やかに彩る人です。" },
     BITTER: { color: "#A67C52", icon: "☕", message: "あなたは落ち着きのあるビター派。物事の本質を見極め、静かな時間を楽しめる大人な魅力があります。" },
     FLORAL: { color: "#B39DDB", icon: "🌸", message: "あなたは華やかな香りを愛するロマンチスト。繊細な感性を大切にし、日常に美しさを見つける達人です。" },
-    RELAX: { color: "#8FBC8F", icon: "🌿", message: "あなたは穏やかな休息を大切にする癒し系。コーヒーと共に深呼吸して、自分を労る名人です。" },
-    WORK: { color: "#5F9EA0", icon: "💻", message: "あなたは高い集中力を持つ努力家。コーヒーを相棒に、目標に向かって突き進む情熱を持っています。" },
-    REFRESH: { color: "#00CED1", icon: "✨", message: "あなたは切り替え上手なポジティブ思考の持ち主。一杯のコーヒーで心を洗練させ、常に新鮮な気持ちで挑めます。" },
 };
 
 const FLAVOR_KEYWORDS: Record<string, { category: string; keywords: string[]; icon: string; color: string }> = {
