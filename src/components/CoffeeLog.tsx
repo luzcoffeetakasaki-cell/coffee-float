@@ -35,11 +35,19 @@ const STAMPS: Record<string, { color: string; icon: string; message: string }> =
     FLORAL: { color: "#B39DDB", icon: "🌸", message: "あなたは華やかな香りを愛するロマンチスト。繊細な感性を大切にし、日常に美しさを見つける達人です。" },
 };
 
+const FLAVOR_KEYWORDS: Record<string, { category: string; keywords: string[]; icon: string; color: string }> = {
+    FRUITY: { category: "フルーティー", keywords: ["柑橘", "シトラス", "ベリー", "フルーツ", "酸味", "レモン", "オレンジ", "グレープ"], icon: "🍋", color: "#FFB347" },
+    SWEET: { category: "スイート/リッチ", keywords: ["チョコ", "キャラメル", "甘み", "コク", "バニラ", "蜂蜜", "シュガー", "まろやか"], icon: "🍫", color: "#FF8DA1" },
+    FLORAL: { category: "フローラル/ハーブ", keywords: ["花", "フローラル", "ハーブ", "香り", "ジャスミン", "ローズ", "ティー", "紅茶"], icon: "🌸", color: "#B39DDB" },
+    ROASTY: { category: "ロースティー/ナッツ", keywords: ["香ばしい", "ナッツ", "スモーキー", "苦味", "アーモンド", "深み", "焙煎"], icon: "🌰", color: "#A67C52" },
+};
+
 export default function CoffeeLog() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
+    const [keywordStats, setKeywordStats] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
     const [nickname, setNickname] = useState("");
     const [isEditingName, setIsEditingName] = useState(false);
@@ -107,19 +115,30 @@ export default function CoffeeLog() {
             })) as Post[];
             setPosts(newPosts);
 
-            // 統計の計算 (お気に入りは3倍、それ以外は1倍の重み)
+            // 統計とキーワードの計算
             const newStats: Record<string, number> = {};
-            let totalWeight = 0;
+            const newKeywordStats: Record<string, number> = {};
+
             newPosts.forEach(p => {
+                const weight = p.isFavorite ? 3 : 1;
+
+                // スタンプの統計
                 if (p.flavorStamp) {
-                    const weight = p.isFavorite ? 3 : 1;
                     newStats[p.flavorStamp] = (newStats[p.flavorStamp] || 0) + weight;
-                    totalWeight += weight;
                 }
+
+                // キーワードの抽出
+                Object.entries(FLAVOR_KEYWORDS).forEach(([key, info]) => {
+                    info.keywords.forEach(word => {
+                        if (p.flavorText.includes(word)) {
+                            newKeywordStats[key] = (newKeywordStats[key] || 0) + weight;
+                        }
+                    });
+                });
             });
-            // 内部的に「重みの合計」を保存するように変更（%計算用）
-            // statsには重み付きカウントをそのまま入れる
+
             setStats(newStats);
+            setKeywordStats(newKeywordStats);
             setLoading(false);
         });
 
@@ -417,7 +436,25 @@ export default function CoffeeLog() {
                                     </p>
 
                                     <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px dashed rgba(198, 166, 100, 0.3)" }}>
-                                        <h4 style={{ fontSize: "0.8rem", color: "var(--accent-gold)", marginBottom: "0.5rem" }}>💡 あなたにおすすめの傾向</h4>
+                                        <h4 style={{ fontSize: "0.8rem", color: "var(--accent-gold)", marginBottom: "0.8rem" }}>💡 あなたの感性に寄り添ったアドバイス</h4>
+                                        <div style={{ marginBottom: "1rem" }}>
+                                            <p style={{ fontSize: "0.85rem", opacity: 0.9, lineHeight: "1.6", background: "rgba(255,255,255,0.05)", padding: "1rem", borderRadius: "0.8rem", borderLeft: "4px solid var(--accent-gold)" }}>
+                                                {(() => {
+                                                    const topKeyword = Object.entries(keywordStats).sort((a, b) => b[1] - a[1])[0]?.[0];
+                                                    if (topKeyword) {
+                                                        const info = FLAVOR_KEYWORDS[topKeyword];
+                                                        const detectedWords = posts
+                                                            .map(p => info.keywords.filter(w => p.flavorText.includes(w)))
+                                                            .flat()
+                                                            .filter((v, i, a) => a.indexOf(v) === i)
+                                                            .slice(0, 3);
+
+                                                        return `最近のコメントからは「${detectedWords.join('・')}」といった言葉がよく見られますね。マスターの繊細な味覚は、特に ${info.category} なニュアンスを敏感にキャッチしているようです。こういった深みのある表現を大切にするマスターには、次はこんな体験が合うかもしれません。`;
+                                                    }
+                                                    return "まだコメントによる分析が少ないですが、スタンプの傾向からは以下の豆がおすすめです。";
+                                                })()}
+                                            </p>
+                                        </div>
                                         <p style={{ fontSize: "0.8rem", opacity: 0.8, lineHeight: "1.5" }}>
                                             {topStamp === "FRUITY" || topStamp === "JUICY" ?
                                                 "浅煎りのエチオピアやケニアがおすすめ！ワインのような芳醇な香りを楽しめるはず。" :
@@ -428,6 +465,28 @@ export default function CoffeeLog() {
                                                         "ゲイシャ種やウォッシュド精製の豆を探してみて。驚くほどクリーンで華やかな体験が待っています。"
                                             }
                                         </p>
+                                    </div>
+
+                                    {/* 頻出キーワードタグ */}
+                                    <div style={{ marginTop: "1.2rem" }}>
+                                        <p style={{ fontSize: "0.7rem", opacity: 0.6, marginBottom: "0.5rem" }}>Detected Flavor Vocabulary</p>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                                            {Object.entries(keywordStats)
+                                                .sort((a, b) => b[1] - a[1])
+                                                .map(([key, count]) => (
+                                                    <span key={key} style={{
+                                                        fontSize: "0.7rem",
+                                                        background: `${FLAVOR_KEYWORDS[key].color}22`,
+                                                        color: FLAVOR_KEYWORDS[key].color,
+                                                        padding: "0.2rem 0.5rem",
+                                                        borderRadius: "0.4rem",
+                                                        border: `1px solid ${FLAVOR_KEYWORDS[key].color}44`
+                                                    }}>
+                                                        {FLAVOR_KEYWORDS[key].icon} {FLAVOR_KEYWORDS[key].category}
+                                                    </span>
+                                                ))
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
