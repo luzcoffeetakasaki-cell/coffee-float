@@ -81,3 +81,11 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
+
+/* Base style for form elements to prevent iOS zoom */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+  font-family: inherit;
+}

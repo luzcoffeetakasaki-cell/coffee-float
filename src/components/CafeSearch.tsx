@@ -123,7 +123,7 @@ export default function CafeSearch() {
                             border: "1px solid var(--glass-border)",
                             background: "rgba(255,255,255,0.05)",
                             color: "white",
-                            fontSize: "1rem",
+                            fontSize: "16px",
                             outline: "none",
                             boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
                         }}
@@ -207,14 +207,14 @@ export default function CafeSearch() {
                                     placeholder="店名"
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
-                                    style={{ width: "100%", padding: "0.8rem", borderRadius: "0.6rem", background: "rgba(0,0,0,0.2)", color: "white", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "0.8rem", outline: "none" }}
+                                    style={{ width: "100%", padding: "0.8rem", borderRadius: "0.6rem", background: "rgba(0,0,0,0.2)", color: "white", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "0.8rem", outline: "none", fontSize: "16px" }}
                                     required
                                 />
                                 <input
                                     placeholder="メモ (例: ラテが絶品)"
                                     value={newNote}
                                     onChange={(e) => setNewNote(e.target.value)}
-                                    style={{ width: "100%", padding: "0.8rem", borderRadius: "0.6rem", background: "rgba(0,0,0,0.2)", color: "white", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "0.8rem", outline: "none" }}
+                                    style={{ width: "100%", padding: "0.8rem", borderRadius: "0.6rem", background: "rgba(0,0,0,0.2)", color: "white", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "0.8rem", outline: "none", fontSize: "16px" }}
                                 />
                                 <div style={{ display: "flex", gap: "0.5rem" }}>
                                     <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.6rem", background: "var(--accent-gold)", border: "none", fontWeight: "bold", cursor: "pointer" }}>保存する</button>

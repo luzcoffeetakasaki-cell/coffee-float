@@ -293,7 +293,7 @@ export default function CoffeeLog() {
                                         border: "1px solid var(--accent-gold)",
                                         background: "rgba(0,0,0,0.3)",
                                         color: "white",
-                                        fontSize: "0.9rem"
+                                        fontSize: "16px"
                                     }}
                                     autoFocus
                                 />
@@ -462,7 +462,7 @@ export default function CoffeeLog() {
                                         background: "rgba(0,0,0,0.3)",
                                         border: "1px solid rgba(255,255,255,0.1)",
                                         color: "white",
-                                        fontSize: "0.9rem",
+                                        fontSize: "16px",
                                         outline: "none"
                                     }}
                                 />

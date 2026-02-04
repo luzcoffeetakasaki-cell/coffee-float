@@ -202,7 +202,7 @@ export default function MyPage({ onClose }: { onClose: () => void }) {
                                         border: "1px solid var(--accent-gold)",
                                         background: "rgba(0,0,0,0.3)",
                                         color: "white",
-                                        fontSize: "0.9rem"
+                                        fontSize: "16px"
                                     }}
                                     autoFocus
                                 />

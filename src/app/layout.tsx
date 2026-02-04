@@ -22,7 +22,8 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5, // ユーザーのズームは許可しつつ、自動ズーム後の復帰をスムーズにする
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
