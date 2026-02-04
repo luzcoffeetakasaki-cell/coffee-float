@@ -224,8 +224,7 @@ export default function CoffeeLog() {
 
         const q = query(
             collection(db, "notifications"),
-            where("toUserId", "==", userId),
-            orderBy("createdAt", "desc") // Add orderBy for consistent order
+            where("toUserId", "==", userId)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -233,6 +232,14 @@ export default function CoffeeLog() {
                 id: doc.id,
                 ...doc.data(),
             })) as Notification[];
+
+            // クライアントサイドでソート（インデックス不足対策）
+            newNotifications.sort((a, b) => {
+                const timeA = a.createdAt?.toMillis?.() || 0;
+                const timeB = b.createdAt?.toMillis?.() || 0;
+                return timeB - timeA;
+            });
+
             setNotifications(newNotifications);
         }, (error) => {
             console.error("Notification listener failed:", error);
