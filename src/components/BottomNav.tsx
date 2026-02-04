@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-type TabType = "home" | "log" | "beans";
+type TabType = "home" | "log" | "beans" | "explore";
 
 interface BottomNavProps {
     activeTab: TabType;
@@ -11,9 +11,10 @@ interface BottomNavProps {
 }
 
 const TABS = [
-    { id: "home", label: "ホーム", icon: "🏠" },
-    { id: "log", label: "ログ", icon: "📊" },
-    { id: "beans", label: "豆", icon: "🫘" },
+    { id: "home", label: "Home", icon: "🏠" },
+    { id: "log", label: "Log", icon: "📋" },
+    { id: "beans", label: "Beans", icon: "🫘" },
+    { id: "explore", label: "探す", icon: "🔍" },
 ];
 
 export default function BottomNav({ activeTab, setActiveTab, unreadCount }: BottomNavProps) {
