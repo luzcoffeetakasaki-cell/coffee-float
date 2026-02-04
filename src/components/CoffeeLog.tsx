@@ -14,6 +14,7 @@ interface Post {
     coffeeName: string;
     flavorText: string;
     flavorStamp?: string | null;
+    isFavorite?: boolean;
     createdAt: Timestamp;
 }
 
@@ -105,13 +106,18 @@ export default function CoffeeLog() {
             })) as Post[];
             setPosts(newPosts);
 
-            // 統計の計算
+            // 統計の計算 (お気に入りは3倍、それ以外は1倍の重み)
             const newStats: Record<string, number> = {};
+            let totalWeight = 0;
             newPosts.forEach(p => {
                 if (p.flavorStamp) {
-                    newStats[p.flavorStamp] = (newStats[p.flavorStamp] || 0) + 1;
+                    const weight = p.isFavorite ? 3 : 1;
+                    newStats[p.flavorStamp] = (newStats[p.flavorStamp] || 0) + weight;
+                    totalWeight += weight;
                 }
             });
+            // 内部的に「重みの合計」を保存するように変更（%計算用）
+            // statsには重み付きカウントをそのまま入れる
             setStats(newStats);
             setLoading(false);
         });
@@ -352,7 +358,8 @@ export default function CoffeeLog() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "2rem" }}>
                                     {Object.entries(STAMPS).map(([key, info]) => {
                                         const count = stats[key] || 0;
-                                        const percent = posts.length > 0 ? (count / posts.length) * 100 : 0;
+                                        const totalWeight = Object.values(stats).reduce((a, b) => a + b, 0);
+                                        const percent = totalWeight > 0 ? (count / totalWeight) * 100 : 0;
                                         return (
                                             <div key={key}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "0.3rem" }}>
@@ -424,7 +431,10 @@ export default function CoffeeLog() {
                                     border: "1px solid rgba(255,255,255,0.1)"
                                 }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                                        <span style={{ fontWeight: "bold" }}>{post.coffeeName}</span>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                            <span style={{ fontWeight: "bold" }}>{post.coffeeName}</span>
+                                            {post.isFavorite && <span style={{ fontSize: "1rem" }}>❤️</span>}
+                                        </div>
                                         {post.flavorStamp && (
                                             <span style={{ fontSize: "0.8rem", color: STAMPS[post.flavorStamp].color }}>
                                                 {STAMPS[post.flavorStamp].icon} {post.flavorStamp}

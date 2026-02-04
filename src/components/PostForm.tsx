@@ -15,6 +15,7 @@ export default function PostForm() {
     const [location, setLocation] = useState("");
     const [flavorText, setFlavorText] = useState("");
     const [flavorStamp, setFlavorStamp] = useState<string | null>(null);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
@@ -118,6 +119,7 @@ export default function PostForm() {
                 location,
                 flavorText,
                 flavorStamp,
+                isFavorite,
                 likes: 0,
                 createdAt: serverTimestamp(),
             });
@@ -126,6 +128,7 @@ export default function PostForm() {
             setLocation("");
             setFlavorText("");
             setFlavorStamp(null);
+            setIsFavorite(false);
             setIsOpen(false);
         } catch (error) {
             console.error("Error adding document: ", error);
@@ -208,6 +211,25 @@ export default function PostForm() {
                                 style={inputStyle}
                             />
                         </div>
+                        <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.05)", padding: "0.8rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)" }}>
+                            <span style={{ fontSize: "0.85rem", fontWeight: "bold" }}>お気に入りに追加 ❤️</span>
+                            <button
+                                type="button"
+                                onClick={() => setIsFavorite(!isFavorite)}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    fontSize: "1.8rem",
+                                    cursor: "pointer",
+                                    transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                                    transform: isFavorite ? "scale(1.2)" : "scale(1)",
+                                    filter: isFavorite ? "none" : "grayscale(100%) opacity(0.5)",
+                                }}
+                            >
+                                ❤️
+                            </button>
+                        </div>
+
                         <div style={{ marginBottom: "1rem" }}>
                             <p style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "0.5rem" }}>味わいスタンプを添える 🏷️</p>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
