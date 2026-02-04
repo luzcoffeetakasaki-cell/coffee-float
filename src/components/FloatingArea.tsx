@@ -148,17 +148,35 @@ export default function FloatingArea() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="floating-layer"
-                            style={{ position: "relative", width: "100%", height: "100%" }}
+                            style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}
                         >
-                            {!isLoadingUser && posts.map((post, index) => (
-                                <Bubble
-                                    key={post.id}
-                                    post={post}
-                                    index={index}
-                                    onClick={() => setSelectedPost(post)}
-                                    isMine={currentUserId === post.userId}
-                                />
-                            ))}
+                            {!isLoadingUser && posts.map((post, index) => {
+                                // 画面分割によるグリッド配置 + ランダムオフセット
+                                const columns = 3; // 縦向きスマホを想定
+                                const rows = Math.ceil(posts.length / columns);
+                                const gridX = index % columns;
+                                const gridY = Math.floor(index / columns) % 8; // 8行分くらいでループ
+
+                                // 各グリッド内での位置 (20% ~ 80% の範囲でランダム)
+                                const offsetX = 15 + Math.random() * 70;
+                                const offsetY = 15 + Math.random() * 70;
+
+                                // 最終的な％位置
+                                const left = ((gridX + offsetX / 100) / columns) * 100;
+                                const top = ((gridY + offsetY / 100) / 8) * 100 + 5; // 上下に少しマージン
+
+                                return (
+                                    <Bubble
+                                        key={post.id}
+                                        post={post}
+                                        index={index}
+                                        initialLeft={`${left}%`}
+                                        initialTop={`${top}%`}
+                                        onClick={() => setSelectedPost(post)}
+                                        isMine={currentUserId === post.userId}
+                                    />
+                                );
+                            })}
                         </motion.div>
                     ) : (
                         <motion.div
@@ -265,22 +283,17 @@ function TimelineCard({ post, onClick, isMine }: { post: Post; onClick: () => vo
     );
 }
 
-function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; onClick: () => void; isMine: boolean }) {
-    // ランダムな位置
-    const [initialPos, setInitialPos] = useState<{ left: string; top: string } | null>(null);
+function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean }) {
+    // 浮遊アニメーション
     const [floatAnim, setFloatAnim] = useState<any>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        // 初期位置
-        const left = Math.random() * 80 + 10;
-        const top = Math.random() * 80 + 10;
-        setInitialPos({ left: `${left}%`, top: `${top}%` });
-
-        // 浮遊アニメーション
+        setIsMounted(true);
         setFloatAnim({
             x: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
             y: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
-            rotate: [0, Math.random() * 4 - 2, Math.random() * 4 - 2, 0], // ほんの少し揺らす
+            rotate: [0, Math.random() * 4 - 2, Math.random() * 4 - 2, 0],
             transition: {
                 duration: 15 + Math.random() * 10,
                 repeat: Infinity,
@@ -292,15 +305,16 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
     const isTrivia = post.userId === "master";
     const stamp = !isTrivia && post.flavorStamp ? STAMPS[post.flavorStamp] : null;
 
-    if (!initialPos) return null;
+    if (!isMounted) return null;
 
     return (
         <motion.div
             className={`bubble ${isMine ? "my-post" : ""}`}
             style={{
-                left: initialPos.left,
-                top: initialPos.top,
+                left: initialLeft,
+                top: initialTop,
                 position: 'absolute',
+                transform: 'translate(-50%, -50%)', // 中心合わせ
                 // カプセル型デザイン (Triviaは別デザイン)
                 border: isMine ? "1px solid #C6A664" : isTrivia ? "1px dashed rgba(255, 255, 255, 0.4)" : "1px solid rgba(255, 255, 255, 0.2)",
                 boxShadow: isMine ? "0 4px 15px rgba(198, 166, 100, 0.4)" : "0 4px 10px rgba(0, 0, 0, 0.1)",
