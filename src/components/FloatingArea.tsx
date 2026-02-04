@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, memo } from "react";
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { motion, Variants, AnimatePresence } from "framer-motion";
@@ -145,83 +145,98 @@ export default function FloatingArea() {
                 </button>
             </div>
 
-            <div
-                style={{
-                    width: "100%",
-                    height: "100%",
-                    overflow: viewMode === "timeline" ? "auto" : "hidden",
-                    paddingTop: viewMode === "timeline" ? "9rem" : "0",
-                    paddingBottom: viewMode === "timeline" ? "8rem" : "0",
-                    position: "relative",
-                }}
-            >
-                <AnimatePresence mode="wait">
-                    {viewMode === "float" ? (
-                        <motion.div
-                            key="float"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="floating-layer"
-                            style={{
-                                position: "relative",
-                                width: "100%",
-                                height: "100%",
-                                overflow: "hidden",
-                                pointerEvents: "auto"
-                            }}
-                        >
-                            {!isLoadingUser && [...posts, ...triviaItems].map((post, index) => {
-                                // 100%の画面内に配置するためのグリッド計算
-                                const columns = 3;
-                                const gridX = index % columns;
-                                const gridY = Math.floor(index / columns);
+            {/* メモ化されたバブルデータの計算 */}
+            {(() => {
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                const bubbleData = useMemo(() => {
+                    const combined = [...posts, ...triviaItems];
+                    return combined.map((post, index) => {
+                        const columns = 3;
+                        const gridX = index % columns;
+                        const gridY = Math.floor(index / columns);
 
-                                // 各セル内での位置を少しランダムに
-                                const offsetX = 15 + Math.random() * 70;
-                                const offsetY = 15 + Math.random() * 70;
+                        // 各セル内での位置をここで固定する
+                        const offsetX = 15 + Math.random() * 70;
+                        const offsetY = 15 + Math.random() * 70;
 
-                                const left = ((gridX + offsetX / 100) / columns) * 100;
-                                const top = ((gridY + offsetY / 100) / 5) * 100; // 最大12個なので4-5行分
+                        const left = ((gridX + offsetX / 100) / columns) * 100;
+                        const top = ((gridY + offsetY / 100) / 5) * 100;
 
-                                return (
-                                    <Bubble
-                                        key={post.id + index}
-                                        post={post}
-                                        index={index}
-                                        initialLeft={`${left}%`}
-                                        initialTop={`${top}%`}
-                                        onClick={() => setSelectedPost(post)}
-                                        isMine={currentUserId === post.userId}
-                                    />
-                                );
-                            })}
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="timeline"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            style={{ padding: "0 1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}
-                        >
-                            {/* タイムラインにはユーザーの投稿のみ表示（雑学を除外） */}
-                            {posts.sort((a, b) => {
-                                const timeA = a.createdAt?.toMillis?.() || 0;
-                                const timeB = b.createdAt?.toMillis?.() || 0;
-                                return timeB - timeA;
-                            }).map((post) => (
-                                <TimelineCard
-                                    key={post.id}
-                                    post={post}
-                                    onClick={() => setSelectedPost(post)}
-                                    isMine={currentUserId === post.userId}
-                                />
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                        return {
+                            post,
+                            index,
+                            left: `${left}%`,
+                            top: `${top}%`
+                        };
+                    });
+                }, [posts, triviaItems]);
+
+                return (
+                    <div
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            overflow: viewMode === "timeline" ? "auto" : "hidden",
+                            paddingTop: viewMode === "timeline" ? "9rem" : "0",
+                            paddingBottom: viewMode === "timeline" ? "8rem" : "0",
+                            position: "relative",
+                        }}
+                    >
+                        <AnimatePresence mode="wait">
+                            {viewMode === "float" ? (
+                                <motion.div
+                                    key="float"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="floating-layer"
+                                    style={{
+                                        position: "relative",
+                                        width: "100%",
+                                        height: "100%",
+                                        overflow: "hidden",
+                                        pointerEvents: "auto"
+                                    }}
+                                >
+                                    {!isLoadingUser && bubbleData.map((data) => (
+                                        <Bubble
+                                            key={data.post.id + data.index}
+                                            post={data.post}
+                                            index={data.index}
+                                            initialLeft={data.left}
+                                            initialTop={data.top}
+                                            onClick={() => setSelectedPost(data.post)}
+                                            isMine={currentUserId === data.post.userId}
+                                        />
+                                    ))}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="timeline"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    style={{ padding: "0 1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}
+                                >
+                                    {/* タイムラインにはユーザーの投稿のみ表示（雑学を除外） */}
+                                    {posts.sort((a, b) => {
+                                        const timeA = a.createdAt?.toMillis?.() || 0;
+                                        const timeB = b.createdAt?.toMillis?.() || 0;
+                                        return timeB - timeA;
+                                    }).map((post) => (
+                                        <TimelineCard
+                                            key={post.id}
+                                            post={post}
+                                            onClick={() => setSelectedPost(post)}
+                                            isMine={currentUserId === post.userId}
+                                        />
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                );
+            })()}
 
             <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
         </>
@@ -307,7 +322,7 @@ function TimelineCard({ post, onClick, isMine }: { post: Post; onClick: () => vo
     );
 }
 
-function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean }) {
+const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { post: Post; index: number; initialLeft: string; initialTop: string; onClick: () => void; isMine: boolean }) {
     // 浮遊アニメーション
     const [floatAnim, setFloatAnim] = useState<any>(null);
     const [isMounted, setIsMounted] = useState(false);
@@ -319,9 +334,9 @@ function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { pos
             y: [0, Math.random() * 30 - 15, Math.random() * 30 - 15, 0],
             rotate: [0, Math.random() * 4 - 2, Math.random() * 4 - 2, 0],
             transition: {
-                duration: 15 + Math.random() * 10,
+                duration: 20 + Math.random() * 10, // 少しゆっくりに
                 repeat: Infinity,
-                ease: "easeInOut",
+                ease: "linear", // linear のほうが定常的に動いている感じが出る
             }
         });
     }, []);
@@ -447,4 +462,4 @@ function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { pos
             )}
         </motion.div>
     );
-}
+});
