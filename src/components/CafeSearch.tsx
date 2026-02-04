@@ -39,6 +39,9 @@ export default function CafeSearch() {
             })) as { id: string; name: string; note: string }[];
             setFavorites(favs);
             setLoading(false);
+        }, (error) => {
+            console.error("Favorite cafes listener error:", error);
+            setLoading(false);
         });
 
         return () => unsubscribe();
@@ -79,6 +82,7 @@ export default function CafeSearch() {
             setIsRegistering(false);
         } catch (error) {
             console.error("Failed to add favorite", error);
+            alert("お気に入りの保存に失敗しました。時間をおいて再度お試しください。");
         }
     };
 

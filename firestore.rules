@@ -25,5 +25,9 @@ service cloud.firestore {
     match /beans/{beanId} {
       allow read, write: if true;
     }
+
+    match /favoriteCafes/{cafeId} {
+      allow read, write: if true;
+    }
   }
 }
