@@ -163,19 +163,25 @@ export default function FloatingArea() {
                 const bubbleData = useMemo(() => {
                     const combined = [...posts, ...triviaItems];
                     const count = combined.length || 1;
-                    const columns = 2.8; // 少し余裕を持たせる
-                    const rows = Math.ceil(count / 2.5) + 1; // 動的に行数を計算
+                    const columns = 3;
+                    const rowsCount = Math.ceil(count / columns);
 
                     return combined.map((post, index) => {
-                        const gridX = index % 3;
-                        const gridY = Math.floor(index / 3);
+                        const gridX = index % columns;
+                        const gridY = Math.floor(index / columns);
 
                         const seed = post.id || `trivia-${index}`;
                         const offsetX = 10 + getDeterministicRandom(seed + "x") * 80;
                         const offsetY = 10 + getDeterministicRandom(seed + "y") * 80;
 
-                        const left = ((gridX + offsetX / 100) / 3) * 100;
-                        const top = ((gridY + offsetY / 100) / rows) * 100;
+                        // 横方向の中央寄せ
+                        const leftInCell = (gridX + offsetX / 100) / columns;
+                        const left = leftInCell * 100;
+
+                        // 縦方向の中央寄せ (全行数に合わせてオフセットをつける)
+                        const rowCenterOffset = (5 - rowsCount) / 2; // 最大5行想定で中央に寄せる
+                        const topInCell = (gridY + rowCenterOffset + offsetY / 100) / 5;
+                        const top = topInCell * 100;
 
                         return {
                             post,
@@ -204,11 +210,9 @@ export default function FloatingArea() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="floating-layer"
                                     style={{
-                                        position: "relative",
-                                        width: "100%",
-                                        height: "100%",
+                                        position: "absolute",
+                                        inset: 0,
                                         overflow: "hidden",
                                         pointerEvents: "auto"
                                     }}
