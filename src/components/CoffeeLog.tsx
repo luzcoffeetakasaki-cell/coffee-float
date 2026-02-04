@@ -9,6 +9,7 @@ import { writeBatch, getDocs } from "firebase/firestore";
 import { usePWA } from "@/hooks/usePWA";
 import { motion, AnimatePresence } from "framer-motion";
 import DetailModal from "./DetailModal";
+import BadgeListModal from "./BadgeListModal";
 import { BADGES, Badge } from "@/data/badges";
 import { getRecommendation, Recommendation } from "@/data/recommendations";
 
@@ -75,6 +76,7 @@ export default function CoffeeLog() {
     const [nickname, setNickname] = useState("");
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [selectedBadge, setSelectedBadge] = useState<{ badge: Badge; isEarned: boolean } | null>(null);
+    const [showBadgeListModal, setShowBadgeListModal] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
 
     // Mood Rec States
@@ -598,60 +600,105 @@ export default function CoffeeLog() {
                             gap: "1rem",
                             justifyItems: "center"
                         }}>
-                            {BADGES.map((badge) => {
-                                const isEarned = earnedBadges.includes(badge.id);
-                                return (
-                                    <motion.div
-                                        key={badge.id}
-                                        whileHover={isEarned ? { scale: 1.1 } : {}}
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            gap: "0.5rem",
-                                            cursor: isEarned ? "pointer" : "default",
-                                            opacity: isEarned ? 1 : 0.4,
-                                            textAlign: "center"
-                                        }}
-                                        onClick={() => {
-                                            setSelectedBadge({ badge, isEarned });
-                                        }}
-                                    >
-                                        <div style={{
-                                            width: "56px",
-                                            height: "56px",
-                                            borderRadius: "50%",
-                                            background: isEarned
-                                                ? "linear-gradient(135deg, rgba(198,166,100,0.3) 0%, rgba(198,166,100,0.1) 100%)"
-                                                : "rgba(255,255,255,0.05)",
-                                            border: isEarned
-                                                ? "2px solid var(--accent-gold)"
-                                                : "2px dashed rgba(255,255,255,0.1)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            fontSize: "1.8rem",
-                                            filter: isEarned ? "none" : "grayscale(100%) blur(1px)",
-                                            boxShadow: isEarned ? "0 0 15px rgba(198,166,100,0.2)" : "none"
-                                        }}>
-                                            {isEarned ? badge.icon : "？"}
-                                        </div>
-                                        <div style={{
-                                            fontSize: "0.6rem",
-                                            fontWeight: "bold",
-                                            color: isEarned ? "var(--accent-gold)" : "rgba(255,255,255,0.4)",
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            maxWidth: "100%"
-                                        }}>
-                                            {isEarned ? badge.name : "Locked"}
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+                            {BADGES
+                                .sort((a, b) => {
+                                    // 獲得済みを先に表示
+                                    const aEarned = earnedBadges.includes(a.id);
+                                    const bEarned = earnedBadges.includes(b.id);
+                                    if (aEarned && !bEarned) return -1;
+                                    if (!aEarned && bEarned) return 1;
+                                    return 0;
+                                })
+                                .slice(0, 3) // トップ3のみ表示
+                                .map((badge) => {
+                                    const isEarned = earnedBadges.includes(badge.id);
+                                    return (
+                                        <motion.div
+                                            key={badge.id}
+                                            whileHover={isEarned ? { scale: 1.1 } : {}}
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                gap: "0.5rem",
+                                                cursor: isEarned ? "pointer" : "default",
+                                                opacity: isEarned ? 1 : 0.4,
+                                                textAlign: "center"
+                                            }}
+                                            onClick={() => {
+                                                setSelectedBadge({ badge, isEarned });
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: "64px",
+                                                height: "64px",
+                                                borderRadius: "50%",
+                                                background: isEarned
+                                                    ? "linear-gradient(135deg, rgba(198,166,100,0.3) 0%, rgba(198,166,100,0.1) 100%)"
+                                                    : "rgba(255,255,255,0.05)",
+                                                border: isEarned
+                                                    ? "2px solid var(--accent-gold)"
+                                                    : "2px dashed rgba(255,255,255,0.1)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontSize: "2rem",
+                                                filter: isEarned ? "none" : "grayscale(100%) blur(1px)",
+                                                boxShadow: isEarned ? "0 0 15px rgba(198,166,100,0.2)" : "none"
+                                            }}>
+                                                {isEarned ? badge.icon : badge.secret ? "?" : badge.icon}
+                                            </div>
+                                            <div style={{
+                                                fontSize: "0.6rem",
+                                                fontWeight: "bold",
+                                                color: isEarned ? "var(--accent-gold)" : "rgba(255,255,255,0.4)",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                maxWidth: "100%"
+                                            }}>
+                                                {isEarned ? badge.name : "Locked"}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+
+                            {/* もっと見るボタン */}
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowBadgeListModal(true)}
+                                style={{
+                                    width: "64px",
+                                    height: "64px",
+                                    borderRadius: "50%",
+                                    background: "rgba(255,255,255,0.05)",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    color: "var(--accent-gold)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "0.8rem",
+                                    fontWeight: "bold",
+                                    cursor: "pointer",
+                                    flexDirection: "column",
+                                    gap: "0.2rem"
+                                }}
+                            >
+                                <span style={{ fontSize: "1.2rem" }}>📚</span>
+                                More
+                            </motion.button>
                         </div>
                     </section>
+
+                    {/* Badge List Modal */}
+                    <BadgeListModal
+                        isOpen={showBadgeListModal}
+                        onClose={() => setShowBadgeListModal(false)}
+                        badges={BADGES}
+                        earnedBadges={earnedBadges}
+                        onSelectBadge={(badge, isEarned) => setSelectedBadge({ badge, isEarned })}
+                    />
 
                     {/* コーヒーカルテ（高度な分析） */}
                     <section style={{
