@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, Suspense } from "react";
 import FloatingArea from "@/components/FloatingArea";
 import PostForm from "@/components/PostForm";
 import Disclaimer from "@/components/Disclaimer";
@@ -9,9 +8,36 @@ import BeanList from "@/components/BeanList";
 import LineOpenBanner from "@/components/LineOpenBanner";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
+import { useEffect, useState, Suspense } from "react";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { getCurrentUserId } from "@/lib/auth";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "log" | "beans">("home");
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let unsubscribe: () => void;
+
+    const init = async () => {
+      const id = await getCurrentUserId();
+      if (!id) return;
+
+      const q = query(
+        collection(db, "notifications"),
+        where("toUserId", "==", id),
+        where("read", "==", false)
+      );
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        setUnreadCount(snapshot.size);
+      });
+    };
+
+    init();
+    return () => unsubscribe && unsubscribe();
+  }, []);
 
   return (
     <main style={{ height: "100dvh", position: "relative", overflow: "hidden" }}>
@@ -82,7 +108,7 @@ export default function Home() {
       }} />
 
       {/* Modern Bottom Navigation */}
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} unreadCount={unreadCount} />
     </main>
   );
 }

@@ -7,6 +7,7 @@ type TabType = "home" | "log" | "beans";
 interface BottomNavProps {
     activeTab: TabType;
     setActiveTab: (tab: TabType) => void;
+    unreadCount: number;
 }
 
 const TABS = [
@@ -15,7 +16,7 @@ const TABS = [
     { id: "beans", label: "豆", icon: "🫘" },
 ];
 
-export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
+export default function BottomNav({ activeTab, setActiveTab, unreadCount }: BottomNavProps) {
     return (
         <nav style={{
             position: "fixed",
@@ -66,6 +67,30 @@ export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
                                 display: isActive ? "inline" : "none",
                                 whiteSpace: "nowrap"
                             }}>{tab.label}</span>
+
+                            {tab.id === "log" && unreadCount > 0 && (
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    style={{
+                                        position: "absolute",
+                                        top: "0.4rem",
+                                        right: "0.8rem",
+                                        background: "#ff4b2b",
+                                        color: "white",
+                                        fontSize: "0.6rem",
+                                        fontWeight: "bold",
+                                        padding: "0.2rem 0.4rem",
+                                        borderRadius: "1rem",
+                                        minWidth: "1.2rem",
+                                        textAlign: "center",
+                                        border: "2px solid #1e0f0a",
+                                        boxShadow: "0 2px 8px rgba(255, 75, 43, 0.4)",
+                                    }}
+                                >
+                                    {unreadCount}
+                                </motion.div>
+                            )}
 
                             {isActive && (
                                 <motion.div
