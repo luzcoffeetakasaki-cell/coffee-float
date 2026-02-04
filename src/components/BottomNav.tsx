@@ -48,7 +48,7 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount }: Bott
                                 position: "relative",
                                 background: "transparent",
                                 border: "none",
-                                borderRadius: "2rem",
+                                borderRadius: "2.5rem",
                                 padding: "0.7rem 1.4rem",
                                 fontSize: "0.85rem",
                                 fontWeight: "600",
@@ -96,15 +96,19 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount }: Bott
                             {isActive && (
                                 <motion.div
                                     layoutId="active-pill"
+                                    transition={{
+                                        type: "spring",
+                                        bounce: 0.15,
+                                        duration: 0.5
+                                    }}
                                     style={{
                                         position: "absolute",
                                         inset: 0,
                                         background: "var(--accent-gold)",
-                                        borderRadius: "2rem",
+                                        borderRadius: "2.5rem", // Match button borderRadius
                                         zIndex: -1,
                                         boxShadow: "0 4px 15px rgba(198, 166, 100, 0.3)",
                                     }}
-                                    transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
                                 />
                             )}
                         </button>
