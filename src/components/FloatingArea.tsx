@@ -148,6 +148,16 @@ export default function FloatingArea() {
 
             {/* メモ化されたバブルデータの計算 */}
             {(() => {
+                // ポストIDに基づいた決定論的な乱数を生成する
+                const getDeterministicRandom = (seed: string) => {
+                    let hash = 0;
+                    for (let i = 0; i < seed.length; i++) {
+                        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    const x = Math.sin(hash) * 10000;
+                    return x - Math.floor(x);
+                };
+
                 // eslint-disable-next-line react-hooks/rules-of-hooks
                 const bubbleData = useMemo(() => {
                     const combined = [...posts, ...triviaItems];
@@ -156,9 +166,10 @@ export default function FloatingArea() {
                         const gridX = index % columns;
                         const gridY = Math.floor(index / columns);
 
-                        // 各セル内での位置をここで固定する
-                        const offsetX = 15 + Math.random() * 70;
-                        const offsetY = 15 + Math.random() * 70;
+                        // 各セル内での位置をここで固定する (IDに基づいた乱数を使用)
+                        const seed = post.id || `trivia-${index}`;
+                        const offsetX = 15 + getDeterministicRandom(seed + "x") * 70;
+                        const offsetY = 15 + getDeterministicRandom(seed + "y") * 70;
 
                         const left = ((gridX + offsetX / 100) / columns) * 100;
                         const top = ((gridY + offsetY / 100) / 5) * 100;
