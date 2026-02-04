@@ -14,6 +14,7 @@ interface Bean {
     origin?: string; // 生産地
     process?: string; // 精製方法
     roastDate: string; // 焙煎日
+    notes?: string; // 備考
     createdAt: Timestamp;
 }
 
@@ -29,6 +30,7 @@ export default function BeanList() {
     const [origin, setOrigin] = useState("");
     const [process, setProcess] = useState("");
     const [roastDate, setRoastDate] = useState("");
+    const [notes, setNotes] = useState("");
 
     useEffect(() => {
         const initUser = async () => {
@@ -105,6 +107,7 @@ export default function BeanList() {
                 origin: origin || "",
                 process: process || "",
                 roastDate,
+                notes: notes || "",
                 createdAt: Timestamp.now(),
             });
             setIsAdding(false);
@@ -113,6 +116,7 @@ export default function BeanList() {
             setOrigin("");
             setProcess("");
             setRoastDate("");
+            setNotes("");
         } catch (error) {
             console.error("Error adding bean:", error);
             alert("登録に失敗しました💦");
@@ -248,6 +252,15 @@ export default function BeanList() {
                                     style={inputStyle}
                                 />
                             </div>
+                            <div>
+                                <label style={{ display: "block", fontSize: "0.8rem", marginBottom: "0.3rem", opacity: 0.8 }}>備考 (メモ)</label>
+                                <textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder="例：ロースト深め、ミルクに合う"
+                                    style={{ ...inputStyle, minHeight: "80px", resize: "none", fontFamily: "inherit" }}
+                                />
+                            </div>
                             <button
                                 type="submit"
                                 style={{
@@ -332,9 +345,23 @@ export default function BeanList() {
                                         fontSize: "0.85rem",
                                         color: daysSince < 14 ? "#4CAF50" : daysSince < 30 ? "#FFC107" : "#FF5722"
                                     }}>
-                                        {daysSince}日経過
                                     </div>
                                 </div>
+
+                                {bean.notes && (
+                                    <div style={{
+                                        marginTop: "0.8rem",
+                                        padding: "0.8rem",
+                                        background: "rgba(255,255,255,0.03)",
+                                        borderRadius: "0.6rem",
+                                        fontSize: "0.8rem",
+                                        lineHeight: "1.5",
+                                        borderLeft: "3px solid var(--accent-gold)",
+                                        opacity: 0.9
+                                    }}>
+                                        {bean.notes}
+                                    </div>
+                                )}
 
                                 <button
                                     onClick={() => handlePostFromBean(bean)}
