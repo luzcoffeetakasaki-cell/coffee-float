@@ -15,6 +15,7 @@ interface Post {
     flavorText: string;
     flavorStamp?: string | null;
     isFavorite?: boolean;
+    aging?: number | null;
     createdAt: Timestamp;
 }
 
@@ -441,6 +442,19 @@ export default function CoffeeLog() {
                                             </span>
                                         )}
                                     </div>
+                                    {post.aging !== undefined && post.aging !== null && (
+                                        <div style={{ marginBottom: "0.5rem" }}>
+                                            <span style={{
+                                                fontSize: "0.7rem",
+                                                opacity: 0.6,
+                                                background: "rgba(255,255,255,0.05)",
+                                                padding: "0.2rem 0.5rem",
+                                                borderRadius: "0.5rem"
+                                            }}>
+                                                ⏳ エイジング: {post.aging}日目
+                                            </span>
+                                        </div>
+                                    )}
                                     <p style={{ fontSize: "0.9rem", opacity: 0.8 }}>{post.flavorText}</p>
                                 </div>
                             ))}

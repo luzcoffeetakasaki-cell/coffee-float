@@ -16,6 +16,7 @@ export default function PostForm() {
     const [flavorText, setFlavorText] = useState("");
     const [flavorStamp, setFlavorStamp] = useState<string | null>(null);
     const [isFavorite, setIsFavorite] = useState(false);
+    const [aging, setAging] = useState<number | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
@@ -42,9 +43,22 @@ export default function PostForm() {
 
         // 豆リストからの自動入力イベント
         const handleOpenPost = (e: any) => {
-            const { coffeeName, location } = e.detail;
+            const { coffeeName, location, roastDate } = e.detail;
             setCoffeeName(coffeeName || "");
             setLocation(location || "");
+
+            if (roastDate) {
+                const roast = new Date(roastDate);
+                const today = new Date();
+                const oneDay = 24 * 60 * 60 * 1000;
+                const roastDateOnly = new Date(roast.getFullYear(), roast.getMonth(), roast.getDate());
+                const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const diff = Math.round((todayDateOnly.getTime() - roastDateOnly.getTime()) / oneDay);
+                setAging(diff);
+            } else {
+                setAging(null);
+            }
+
             setIsOpen(true);
         };
 
@@ -120,6 +134,7 @@ export default function PostForm() {
                 flavorText,
                 flavorStamp,
                 isFavorite,
+                aging,
                 likes: 0,
                 createdAt: serverTimestamp(),
             });
@@ -129,6 +144,7 @@ export default function PostForm() {
             setFlavorText("");
             setFlavorStamp(null);
             setIsFavorite(false);
+            setAging(null);
             setIsOpen(false);
         } catch (error) {
             console.error("Error adding document: ", error);
@@ -202,6 +218,20 @@ export default function PostForm() {
                                 style={inputStyle}
                             />
                         </div>
+                        {aging !== null && (
+                            <div style={{ marginBottom: "0.8rem", textAlign: "right" }}>
+                                <span style={{
+                                    fontSize: "0.75rem",
+                                    background: "rgba(198, 166, 100, 0.2)",
+                                    color: "var(--accent-gold)",
+                                    padding: "0.3rem 0.6rem",
+                                    borderRadius: "1rem",
+                                    border: "1px solid rgba(198, 166, 100, 0.3)"
+                                }}>
+                                    ⏳ エイジング: {aging}日目
+                                </span>
+                            </div>
+                        )}
                         <div style={{ marginBottom: "0.8rem" }}>
                             <input
                                 type="text"

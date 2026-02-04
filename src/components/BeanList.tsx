@@ -133,7 +133,8 @@ export default function BeanList() {
         const event = new CustomEvent("coffee-float:open-post", {
             detail: {
                 coffeeName: bean.name,
-                location: bean.shopName || ""
+                location: bean.shopName || "",
+                roastDate: bean.roastDate
             }
         });
         window.dispatchEvent(event);
