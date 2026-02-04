@@ -18,7 +18,7 @@ export default function Home() {
       {/* Header Area */}
       <div style={{
         position: "fixed",
-        top: "1.5rem",
+        top: "calc(1.5rem + var(--safe-top))",
         left: "1.5rem",
         zIndex: 10,
         pointerEvents: "none"

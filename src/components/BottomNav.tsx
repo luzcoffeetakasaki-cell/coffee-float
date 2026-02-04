@@ -19,7 +19,7 @@ export default function BottomNav({ activeTab, setActiveTab }: BottomNavProps) {
     return (
         <nav style={{
             position: "fixed",
-            bottom: "1.5rem",
+            bottom: "calc(1.5rem + var(--safe-bottom))",
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 100,
