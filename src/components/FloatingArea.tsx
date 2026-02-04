@@ -162,18 +162,20 @@ export default function FloatingArea() {
                 // eslint-disable-next-line react-hooks/rules-of-hooks
                 const bubbleData = useMemo(() => {
                     const combined = [...posts, ...triviaItems];
+                    const count = combined.length || 1;
+                    const columns = 2.8; // 少し余裕を持たせる
+                    const rows = Math.ceil(count / 2.5) + 1; // 動的に行数を計算
+
                     return combined.map((post, index) => {
-                        const columns = 3;
-                        const gridX = index % columns;
-                        const gridY = Math.floor(index / columns);
+                        const gridX = index % 3;
+                        const gridY = Math.floor(index / 3);
 
-                        // 各セル内での位置をここで固定する (IDに基づいた乱数を使用)
                         const seed = post.id || `trivia-${index}`;
-                        const offsetX = 15 + getDeterministicRandom(seed + "x") * 70;
-                        const offsetY = 15 + getDeterministicRandom(seed + "y") * 70;
+                        const offsetX = 10 + getDeterministicRandom(seed + "x") * 80;
+                        const offsetY = 10 + getDeterministicRandom(seed + "y") * 80;
 
-                        const left = ((gridX + offsetX / 100) / columns) * 100;
-                        const top = ((gridY + offsetY / 100) / 5) * 100;
+                        const left = ((gridX + offsetX / 100) / 3) * 100;
+                        const top = ((gridY + offsetY / 100) / rows) * 100;
 
                         return {
                             post,
@@ -400,7 +402,7 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                 scale: 0,
                 opacity: 0,
                 left: "50%",
-                top: "45%", // スマホだとナビゲーション分少し上が中心に見える
+                top: "50%",
                 x: "-50%",
                 y: "-50%"
             }}
