@@ -123,7 +123,7 @@ export default function PostForm() {
             <button
                 style={{
                     position: "fixed",
-                    bottom: "2rem",
+                    bottom: "6rem",
                     right: "2rem",
                     zIndex: 100,
                     width: "60px",
@@ -151,7 +151,7 @@ export default function PostForm() {
                     className="glass-panel"
                     style={{
                         position: "fixed",
-                        bottom: "6rem",
+                        bottom: "11rem",
                         right: "2rem",
                         width: "calc(100% - 4rem)",
                         maxWidth: "400px",
