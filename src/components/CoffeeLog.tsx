@@ -448,28 +448,30 @@ export default function CoffeeLog() {
                             border: "1px solid rgba(198, 166, 100, 0.2)"
                         }}>
                             <h3 style={{ fontSize: "1.1rem", marginBottom: "0.5rem", color: "var(--accent-gold)" }}>Mood Pairing 🧠💭</h3>
-                            <p style={{ fontSize: "0.8rem", opacity: 0.7, marginBottom: "1.2rem" }}>今の気分にぴったりの一杯を提案するよ。</p>
+                            <p style={{ fontSize: "0.8rem", opacity: 0.7, marginBottom: "1.2rem", lineHeight: "1.4" }}>今の気分にぴったりの一杯を提案するよ。</p>
 
-                            <form onSubmit={handleGetRecommendation} style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                            <form onSubmit={handleGetRecommendation} style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
                                 <input
                                     placeholder="例: スッキリしたい、疲れた..."
                                     value={moodQuery}
                                     onChange={(e) => setMoodQuery(e.target.value)}
                                     style={{
-                                        flex: 1,
+                                        flex: "1 1 200px", // Allow shrinking but prefer 200px
                                         padding: "0.8rem 1rem",
                                         borderRadius: "0.8rem",
                                         background: "rgba(0,0,0,0.3)",
                                         border: "1px solid rgba(255,255,255,0.1)",
                                         color: "white",
                                         fontSize: "16px",
-                                        outline: "none"
+                                        outline: "none",
+                                        minWidth: 0 // Prevent overflow in flex container
                                     }}
                                 />
                                 <button
                                     type="submit"
                                     disabled={isAnalysing}
                                     style={{
+                                        flex: "1 0 auto",
                                         padding: "0.8rem 1.2rem",
                                         borderRadius: "0.8rem",
                                         background: "var(--accent-gold)",
@@ -509,17 +511,17 @@ export default function CoffeeLog() {
                                         }}
                                     >
                                         <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", marginBottom: "1rem" }}>
-                                            <div style={{ fontSize: "2.5rem" }}>{recommendation.icon}</div>
-                                            <div>
-                                                <div style={{ fontSize: "0.75rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "1px", marginBottom: "0.2rem" }}>RECOMMENDED BEANS</div>
-                                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "white" }}>{recommendation.beans}</div>
+                                            <div style={{ fontSize: "2.5rem", flexShrink: 0 }}>{recommendation.icon}</div>
+                                            <div style={{ minWidth: 0 }}>
+                                                <div style={{ fontSize: "0.65rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "1px", marginBottom: "0.2rem", whiteSpace: "nowrap" }}>RECOMMENDED BEANS</div>
+                                                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "white", wordBreak: "break-word" }}>{recommendation.beans}</div>
                                                 <div style={{ fontSize: "0.8rem", opacity: 0.6 }}>Roast: {recommendation.roast}</div>
                                             </div>
                                         </div>
-                                        <div style={{ fontSize: "0.85rem", background: "rgba(0,0,0,0.2)", padding: "0.8rem", borderRadius: "0.6rem", marginBottom: "1rem", borderLeft: "3px solid var(--accent-gold)" }}>
+                                        <div style={{ fontSize: "0.8rem", background: "rgba(0,0,0,0.2)", padding: "0.8rem", borderRadius: "0.6rem", marginBottom: "1rem", borderLeft: "3px solid var(--accent-gold)", wordBreak: "break-word" }}>
                                             <strong>特徴:</strong> {recommendation.trait}
                                         </div>
-                                        <p style={{ fontSize: "0.85rem", lineHeight: "1.6", opacity: 0.9 }}>
+                                        <p style={{ fontSize: "0.85rem", lineHeight: "1.6", opacity: 0.9, wordBreak: "break-word" }}>
                                             {recommendation.advice}
                                         </p>
                                     </motion.div>
