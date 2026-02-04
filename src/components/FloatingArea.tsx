@@ -169,12 +169,13 @@ export default function FloatingArea() {
                     const rowsCount = Math.ceil(count / cols);
 
                     return combined.map((post, index) => {
+                        const seed = post.id || `trivia-${index}`;
                         const gridX = index % cols;
                         const gridY = Math.floor(index / cols);
 
-                        const seed = post.id || `trivia-${index}`;
-                        const offsetX = 10 + getDeterministicRandom(seed + "x") * 80;
-                        const offsetY = 10 + getDeterministicRandom(seed + "y") * 80;
+                        const seedVal = post.id || `trivia-${index}`;
+                        const offsetX = 10 + getDeterministicRandom(seedVal + "x") * 80;
+                        const offsetY = 10 + getDeterministicRandom(seedVal + "y") * 80;
 
                         // 横方向の中央寄せ (列数に合わせて配置)
                         const colCenterOffset = (cols === 3) ? 0 : (3 - cols) / 2;
@@ -183,12 +184,13 @@ export default function FloatingArea() {
 
                         // 縦方向の中央寄せ
                         const rowCenterOffset = (5 - rowsCount) / 2;
-                        const topInCell = (gridY + rowCenterOffset + offsetY / 100) / 5;
+                        const topInCell = (gridY + rowCenterOffset + offsetY / 100) / 5.1; // 視覚的な補正
                         const top = topInCell * 100;
 
                         return {
                             post,
                             index,
+                            id: seedVal,
                             left: `${left}%`,
                             top: `${top}%`
                         };
@@ -223,7 +225,7 @@ export default function FloatingArea() {
                                 >
                                     {!isLoadingUser && bubbleData.map((data) => (
                                         <Bubble
-                                            key={data.post.id + data.index}
+                                            key={data.id}
                                             post={data.post}
                                             index={data.index}
                                             initialLeft={data.left}
@@ -394,7 +396,7 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                         : "rgba(255, 255, 255, 0.15)",
                 backdropFilter: "blur(5px)",
                 WebkitBackdropFilter: "blur(5px)",
-                zIndex: isMine ? 100 : 10,
+                zIndex: isMine ? 90 : 10,
                 borderRadius: isTrivia ? "50%" : "50px",
                 padding: isTrivia ? "0" : "0.5rem 1rem",
                 width: isTrivia ? "60px" : "auto",
@@ -405,12 +407,13 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                 justifyContent: isTrivia ? "center" : "flex-start",
                 gap: "0.8rem",
                 cursor: "pointer",
+                willChange: "transform, opacity",
             }}
             initial={{
                 scale: 0,
                 opacity: 0,
                 left: "50%",
-                top: "50%",
+                top: "47%", // 視覚的中心
                 x: "-50%",
                 y: "-50%"
             }}
@@ -419,10 +422,9 @@ const Bubble = memo(function Bubble({ post, index, initialLeft, initialTop, onCl
                 opacity: 1,
                 left: initialLeft,
                 top: initialTop,
-                // ゆらゆら漂う動き（-50%のベースを維持したまま数％動かす）
                 x: ["-50%", `-${50 - horizontalAmplitude}%`, `-${50 + horizontalAmplitude}%`, "-50%"],
                 y: ["-50%", `-${50 - verticalAmplitude}%`, `-${50 + verticalAmplitude}%`, "-50%"],
-                rotate: [0, 1.5, -1.5, 0]
+                rotate: [0, 1, -1, 0]
             }}
             transition={{
                 // 広がる動き
