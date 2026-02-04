@@ -462,7 +462,7 @@ export default function CoffeeLog() {
                             </form>
 
                             <AnimatePresence mode="wait">
-                                {isAnalysing && (
+                                {isAnalysing ? (
                                     <motion.div
                                         key="analysing"
                                         initial={{ opacity: 0, y: 10 }}
@@ -473,9 +473,7 @@ export default function CoffeeLog() {
                                         <div style={{ fontSize: "2rem", marginBottom: "1rem", animation: "spin 2s linear infinite" }}>⏳</div>
                                         <p style={{ fontSize: "0.85rem", opacity: 0.8 }}>今のマスターに合う魔法の一杯を抽出中...</p>
                                     </motion.div>
-                                )}
-
-                                {recommendation && !isAnalysing && (
+                                ) : recommendation ? (
                                     <motion.div
                                         key="result"
                                         initial={{ opacity: 0, scale: 0.95 }}
@@ -501,27 +499,8 @@ export default function CoffeeLog() {
                                         <p style={{ fontSize: "0.85rem", lineHeight: "1.6", opacity: 0.9 }}>
                                             {recommendation.advice}
                                         </p>
-                                        <button
-                                            onClick={() => {
-                                                setRecommendation(null);
-                                                setMoodQuery("");
-                                            }}
-                                            style={{
-                                                marginTop: "1.2rem",
-                                                width: "100%",
-                                                padding: "0.5rem",
-                                                background: "none",
-                                                border: "1px solid rgba(255,255,255,0.1)",
-                                                borderRadius: "0.5rem",
-                                                color: "rgba(255,255,255,0.4)",
-                                                fontSize: "0.75rem",
-                                                cursor: "pointer"
-                                            }}
-                                        >
-                                            入力をリセット
-                                        </button>
                                     </motion.div>
-                                )}
+                                ) : null}
                             </AnimatePresence>
                         </div>
                     </section>
