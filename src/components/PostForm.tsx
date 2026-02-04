@@ -22,6 +22,7 @@ export default function PostForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false); // Renamed from isSuccess
     const [showShareModal, setShowShareModal] = useState(false);
+    const [isShutterMode, setIsShutterMode] = useState(false);
     const [lastSharedData, setLastSharedData] = useState<any>(null);
     const [recentLocations, setRecentLocations] = useState<string[]>([]);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
@@ -125,7 +126,17 @@ export default function PostForm() {
         setShowSuccess(false);
         setShowShareModal(false);
         setIsSubmitting(false);
+        setIsShutterMode(false);
         setLastSharedData(null);
+    };
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            alert("シェア用テキストをコピーしました！📋✨");
+        } catch (err) {
+            console.error("Failed to copy: ", err);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -459,7 +470,11 @@ export default function PostForm() {
                             alignItems: "center",
                             justifyContent: "center",
                             padding: "20px",
-                            backdropFilter: "blur(10px)"
+                            backdropFilter: isShutterMode ? "none" : "blur(10px)",
+                            transition: "all 0.3s ease"
+                        }}
+                        onClick={() => {
+                            if (isShutterMode) setIsShutterMode(false);
                         }}
                     >
                         {/* Insta-style Share Card */}
@@ -470,101 +485,176 @@ export default function PostForm() {
                                 width: "100%",
                                 maxWidth: "320px",
                                 aspectRatio: "9/16",
-                                background: "linear-gradient(135deg, #2c1a12 0%, #1a0f0a 100%)",
-                                borderRadius: "24px",
-                                border: "1px solid rgba(198, 166, 100, 0.3)",
-                                padding: "40px 24px",
+                                background: "linear-gradient(135deg, #1a0f0a 0%, #0d0604 100%)",
+                                borderRadius: "32px",
+                                border: isShutterMode ? "none" : "1px solid rgba(198, 166, 100, 0.3)",
+                                padding: "48px 32px",
                                 position: "relative",
                                 overflow: "hidden",
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
                                 textAlign: "center",
-                                boxShadow: "0 20px 50px rgba(0,0,0,0.5)"
+                                boxShadow: isShutterMode ? "none" : "0 30px 60px rgba(0,0,0,0.8)"
                             }}
                         >
-                            {/* Decorative background circle */}
+                            {/* Decorative Elements */}
                             <div style={{
                                 position: "absolute",
-                                top: "-10%",
-                                right: "-10%",
-                                width: "60%",
-                                height: "40%",
-                                background: "radial-gradient(circle, rgba(198, 166, 100, 0.15) 0%, transparent 70%)",
+                                top: "-20%",
+                                left: "-20%",
+                                width: "100%",
+                                height: "60%",
+                                background: "radial-gradient(circle, rgba(198, 166, 100, 0.1) 0%, transparent 70%)",
                                 pointerEvents: "none"
                             }} />
 
-                            <div style={{ fontSize: "3rem", marginBottom: "2rem" }}>☕️</div>
+                            <div style={{
+                                width: "80px",
+                                height: "80px",
+                                background: "rgba(198, 166, 100, 0.1)",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "3rem",
+                                marginBottom: "2.5rem",
+                                border: "1px solid rgba(198, 166, 100, 0.2)"
+                            }}>
+                                ☕️
+                            </div>
 
-                            <h2 style={{ fontSize: "1.8rem", color: "var(--accent-gold)", marginBottom: "1rem", fontWeight: "bold" }}>
+                            <div style={{ fontSize: "0.8rem", color: "var(--accent-gold)", letterSpacing: "3px", marginBottom: "0.5rem", fontWeight: "bold", opacity: 0.6 }}>
+                                COFFEE LOG
+                            </div>
+
+                            <h2 style={{ fontSize: "2rem", color: "white", marginBottom: "1rem", fontWeight: "bold", lineHeight: "1.2" }}>
                                 {lastSharedData?.coffeeName}
                             </h2>
 
-                            <div style={{ fontSize: "1rem", opacity: 0.8, marginBottom: "2.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                📍 {lastSharedData?.location || "Somewhere cozy"}
+                            <div style={{ fontSize: "1rem", opacity: 0.7, marginBottom: "3rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                📍 {lastSharedData?.location || "My Coffee Spot"}
                             </div>
 
-                            <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "16px", width: "100%", marginBottom: "auto" }}>
-                                <div style={{ fontSize: "0.8rem", opacity: 0.5, marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "1px" }}>Flavor Profile</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
+                            <div style={{ background: "rgba(255,255,255,0.03)", padding: "24px", borderRadius: "20px", width: "100%", marginBottom: "auto", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "0.8rem", color: "var(--accent-gold)" }}>
                                     {lastSharedData?.flavorStamp}
                                 </div>
-                                <p style={{ fontSize: "0.9rem", opacity: 0.8, lineHeight: "1.6", fontStyle: "italic" }}>
+                                <p style={{ fontSize: "0.95rem", opacity: 0.8, lineHeight: "1.6", fontStyle: "italic" }}>
                                     "{lastSharedData?.flavorText}"
                                 </p>
                             </div>
 
-                            <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(198, 166, 100, 0.2)", width: "100%" }}>
-                                <div style={{ fontSize: "0.8rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "2px" }}>COFFEE FLOAT</div>
-                                <div style={{ fontSize: "0.6rem", opacity: 0.4, marginTop: "0.4rem" }}>Your Daily Coffee Companion</div>
+                            <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid rgba(198, 166, 100, 0.1)", width: "100%" }}>
+                                <div style={{ fontSize: "0.8rem", color: "var(--accent-gold)", fontWeight: "bold", letterSpacing: "4px" }}>COFFEE FLOAT</div>
+                                <div style={{ fontSize: "0.6rem", opacity: 0.3, marginTop: "0.6rem" }}>Moments of serenity, captured.</div>
                             </div>
                         </motion.div>
 
-                        {/* Actions */}
-                        <div style={{ marginTop: "30px", width: "100%", maxWidth: "320px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <button
-                                onClick={() => {
-                                    if (navigator.share) {
-                                        navigator.share({
-                                            title: "My Coffee Moment",
-                                            text: `I just had a perfect cup of ${lastSharedData?.coffeeName}! ☕️✨\n#CoffeeFloat #CoffeeLog`,
-                                            url: window.location.href
-                                        }).catch(console.error);
-                                    } else {
-                                        alert("お使いのブラウザは共有機能に対応していません💦 スクリーンショットを撮ってシェアしてね！");
-                                    }
-                                }}
-                                style={{
-                                    width: "100%",
-                                    padding: "16px",
-                                    borderRadius: "12px",
-                                    background: "var(--accent-gold)",
-                                    border: "none",
-                                    color: "#1e0f0a",
-                                    fontWeight: "bold",
-                                    fontSize: "1rem",
-                                    cursor: "pointer",
-                                    boxShadow: "0 10px 20px rgba(198, 166, 100, 0.3)"
-                                }}
-                            >
-                                Instagram Stories にシェア 📸
-                            </button>
-                            <button
-                                onClick={handleCloseModalAndReset}
-                                style={{
-                                    width: "100%",
-                                    padding: "16px",
-                                    borderRadius: "12px",
-                                    background: "rgba(255,255,255,0.1)",
-                                    border: "1px solid rgba(255,255,255,0.1)",
-                                    color: "white",
-                                    fontSize: "0.9rem",
-                                    cursor: "pointer"
-                                }}
-                            >
-                                あとで（閉じる）
-                            </button>
-                        </div>
+                        {/* Actions (Hidden in Shutter Mode) */}
+                        <AnimatePresence>
+                            {!isShutterMode && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 20 }}
+                                    style={{ marginTop: "30px", width: "100%", maxWidth: "320px", display: "flex", flexDirection: "column", gap: "12px" }}
+                                >
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsShutterMode(true);
+                                        }}
+                                        style={{
+                                            width: "100%",
+                                            padding: "16px",
+                                            borderRadius: "14px",
+                                            background: "white",
+                                            border: "none",
+                                            color: "#1e0f0a",
+                                            fontWeight: "bold",
+                                            fontSize: "1rem",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "10px"
+                                        }}
+                                    >
+                                        📸 シャッターチャンス
+                                    </button>
+
+                                    <div style={{ display: "flex", gap: "10px" }}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const text = `${lastSharedData?.coffeeName} ☕️✨\n場所: ${lastSharedData?.location || "不明"}\n気分: ${lastSharedData?.flavorStamp}\n"${lastSharedData?.flavorText}"\n#CoffeeFloat #CoffeeLog`;
+                                                copyToClipboard(text);
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: "14px",
+                                                borderRadius: "14px",
+                                                background: "rgba(255,255,255,0.1)",
+                                                border: "1px solid rgba(255,255,255,0.2)",
+                                                color: "white",
+                                                fontSize: "0.9rem",
+                                                fontWeight: "bold",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            本文をコピー 📋
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (navigator.share) {
+                                                    navigator.share({
+                                                        title: "My Coffee Moment",
+                                                        text: `I just had a perfect cup of ${lastSharedData?.coffeeName}! ☕️✨\n#CoffeeFloat #CoffeeLog`,
+                                                        url: window.location.origin
+                                                    }).catch(console.error);
+                                                }
+                                            }}
+                                            style={{
+                                                padding: "14px",
+                                                borderRadius: "14px",
+                                                background: "rgba(255,255,255,0.1)",
+                                                border: "1px solid rgba(255,255,255,0.2)",
+                                                color: "white",
+                                                fontSize: "1.2rem",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            🔗
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCloseModalAndReset();
+                                        }}
+                                        style={{
+                                            width: "100%",
+                                            padding: "12px",
+                                            background: "none",
+                                            border: "none",
+                                            color: "rgba(255,255,255,0.5)",
+                                            fontSize: "0.9rem",
+                                            cursor: "pointer",
+                                            marginTop: "10px"
+                                        }}
+                                    >
+                                        閉じる
+                                    </button>
+
+                                    <p style={{ textAlign: "center", fontSize: "0.75rem", opacity: 0.5 }}>
+                                        ※シャッターボタンを押すとUIが消えます。<br />スクショを撮ったあと画面タップで戻ります。
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </motion.div>
                 )}
             </AnimatePresence>
