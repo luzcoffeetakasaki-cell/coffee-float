@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { db } from "@/lib/firebase";
-import { getCurrentUserId } from "@/lib/auth";
-import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, getDocs, Timestamp } from "firebase/firestore";
+import { getCurrentUserId, isGuestUserId, getStoredDeviceId } from "@/lib/auth";
 
 export default function CafeSearch() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -19,24 +19,56 @@ export default function CafeSearch() {
         const init = async () => {
             const id = await getCurrentUserId();
             setUserId(id);
+
+            const storedGuestId = getStoredDeviceId();
+            if (id && !isGuestUserId(id) && storedGuestId && isGuestUserId(storedGuestId)) {
+                migrateGuestData(storedGuestId, id);
+            }
         };
         init();
     }, []);
+
+    const migrateGuestData = async (guestId: string, lineId: string) => {
+        try {
+            const q = query(
+                collection(db, "favoriteCafes"),
+                where("userId", "==", guestId)
+            );
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return;
+
+            const batch = writeBatch(db);
+            snapshot.docs.forEach((docSnap) => {
+                batch.update(docSnap.ref, { userId: lineId });
+            });
+            await batch.commit();
+            console.log(`Migrated ${snapshot.size} favorite cafes from ${guestId} to ${lineId}`);
+        } catch (error) {
+            console.error("Migration failed", error);
+        }
+    };
 
     useEffect(() => {
         if (!userId) return;
 
         const q = query(
             collection(db, "favoriteCafes"),
-            where("userId", "==", userId),
-            orderBy("createdAt", "desc")
+            where("userId", "==", userId)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const favs = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            })) as { id: string; name: string; note: string }[];
+            })) as any[];
+
+            // クライアント側でソート（インデックスエラー回避）
+            favs.sort((a, b) => {
+                const timeA = a.createdAt?.toMillis?.() || 0;
+                const timeB = b.createdAt?.toMillis?.() || 0;
+                return timeB - timeA;
+            });
+
             setFavorites(favs);
             setLoading(false);
         }, (error) => {
