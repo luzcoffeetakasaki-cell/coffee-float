@@ -7,6 +7,8 @@ import { checkNgWords } from "@/lib/filter";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { query, collection, where, orderBy, limit, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { toPng } from 'html-to-image';
+import { useRef } from 'react';
 
 export default function PostForm({ showTriggerButton = true }: { showTriggerButton?: boolean }) {
     const searchParams = useSearchParams();
@@ -27,6 +29,7 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
     const [lastSharedData, setLastSharedData] = useState<any>(null);
     const [recentLocations, setRecentLocations] = useState<string[]>([]);
     const [ngWarning, setNgWarning] = useState<string | null>(null);
+    const shareCardRef = useRef<HTMLDivElement>(null);
 
     const STAMPS = [
         { label: "SWEET", color: "#FF8DA1", icon: "🍬" },
@@ -142,6 +145,22 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
         }
     };
 
+    const handleSaveImage = async () => {
+        if (shareCardRef.current === null) return;
+
+        try {
+            const dataUrl = await toPng(shareCardRef.current, { cacheBust: true, pixelRatio: 3 });
+            const link = document.createElement('a');
+            link.download = 'coffee_float_moment.png';
+            link.href = dataUrl;
+            link.click();
+            // alert("画像を保存したよ！📸✨");
+        } catch (err) {
+            console.error("Oops, something went wrong!", err);
+            alert("保存に失敗しちゃった... 😢");
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!coffeeName || !flavorText) return;
@@ -232,7 +251,7 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
                 </button>
             )}
 
-            {isOpen && (
+            {isOpen && !isShutterMode && (
                 <div
                     className="glass-panel"
                     style={{
@@ -481,7 +500,7 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
                             position: "fixed",
                             inset: 0,
                             zIndex: 3000,
-                            background: "rgba(0,0,0,0.85)",
+                            background: isShutterMode ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.85)",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
@@ -496,6 +515,7 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
                     >
                         {/* Insta-style Share Card */}
                         <motion.div
+                            ref={shareCardRef}
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             style={{
@@ -659,6 +679,30 @@ export default function PostForm({ showTriggerButton = true }: { showTriggerButt
                                             🔗
                                         </button>
                                     </div>
+
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSaveImage();
+                                        }}
+                                        style={{
+                                            width: "100%",
+                                            padding: "14px",
+                                            borderRadius: "14px",
+                                            background: "rgba(198, 166, 100, 0.2)",
+                                            border: "1px solid rgba(198, 166, 100, 0.3)",
+                                            color: "var(--accent-gold)",
+                                            fontSize: "0.9rem",
+                                            fontWeight: "bold",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "8px"
+                                        }}
+                                    >
+                                        画像を保存 ⬇️
+                                    </button>
 
                                     <button
                                         onClick={(e) => {

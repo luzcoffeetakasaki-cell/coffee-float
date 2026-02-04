@@ -6,7 +6,8 @@ import Disclaimer from "@/components/Disclaimer";
 import CoffeeLog from "@/components/CoffeeLog";
 import BeanList from "@/components/BeanList";
 import LineOpenBanner from "@/components/LineOpenBanner";
-import CafeSearch from "@/components/CafeSearch"; // Added CafeSearch import
+import CafeSearch from "@/components/CafeSearch";
+import RelaxMode from "@/components/RelaxMode"; // Added RelaxMode import
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "@/components/BottomNav";
 import { useEffect, useState, Suspense } from "react";
@@ -14,7 +15,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { getCurrentUserId } from "@/lib/auth";
 
-type TabType = "home" | "log" | "beans" | "explore"; // Updated TabType
+type TabType = "home" | "log" | "beans" | "explore" | "relax"; // Added relax tab
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("home"); // Updated activeTab state type
@@ -85,6 +86,7 @@ export default function Home() {
             {activeTab === "log" && <CoffeeLog />}
             {activeTab === "beans" && <BeanList />}
             {activeTab === "explore" && <CafeSearch />}
+            {activeTab === "relax" && <RelaxMode />}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 import LiffProvider from "@/components/LiffProvider";
+import BgmPlayer from "@/components/BgmPlayer";
+import { RelaxProvider } from "@/context/RelaxContext";
 
 export const metadata: Metadata = {
   title: "Coffee Float - 湯気のように漂うコーヒーの思い出",
@@ -35,7 +37,10 @@ export default function RootLayout({
     <html lang="ja">
       <body>
         <LiffProvider>
-          {children}
+          <RelaxProvider>
+            {children}
+            <BgmPlayer />
+          </RelaxProvider>
         </LiffProvider>
       </body>
     </html>
