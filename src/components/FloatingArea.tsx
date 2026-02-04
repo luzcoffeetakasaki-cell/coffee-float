@@ -42,6 +42,62 @@ export default function FloatingArea() {
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     const [isLoadingUser, setIsLoadingUser] = useState(true);
+    const [isShaking, setIsShaking] = useState(false);
+    const [motionPermission, setMotionPermission] = useState<"granted" | "denied" | "unsupported" | "not-requested">("not-requested");
+
+    // iOS DeviceMotion Permission Request
+    const requestMotionPermission = async () => {
+        if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
+            try {
+                const permission = await (DeviceMotionEvent as any).requestPermission();
+                setMotionPermission(permission);
+                if (permission === "granted") {
+                    setupShakeDetection();
+                }
+            } catch (e) {
+                console.error("Permission request failed", e);
+                setMotionPermission("denied");
+            }
+        } else {
+            setMotionPermission("granted");
+            setupShakeDetection();
+        }
+    };
+
+    const setupShakeDetection = () => {
+        let lastShake = 0;
+        const threshold = 15; // シェイクの感度
+
+        const handleMotion = (event: DeviceMotionEvent) => {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            const speed = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
+            if (speed > threshold) {
+                const now = Date.now();
+                if (now - lastShake > 1000) { // 連打防止
+                    lastShake = now;
+                    triggerShake();
+                }
+            }
+        };
+
+        window.addEventListener("devicemotion", handleMotion);
+        return () => window.removeEventListener("devicemotion", handleMotion);
+    };
+
+    const triggerShake = () => {
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 800);
+    };
+
+    useEffect(() => {
+        // Android or non-iOS permission-free devices
+        if (typeof (DeviceMotionEvent as any).requestPermission !== "function") {
+            setMotionPermission("granted");
+            setupShakeDetection();
+        }
+    }, []);
 
     useEffect(() => {
         getCurrentUserId().then(id => {
@@ -92,15 +148,47 @@ export default function FloatingArea() {
                         index={index}
                         onClick={() => setSelectedPost(post)}
                         isMine={currentUserId === post.userId}
+                        isShaking={isShaking}
                     />
                 ))}
             </div>
+
+            {/* iOS向けのセンサー許可ボタン (必要な場合のみ) */}
+            {motionPermission === "not-requested" && (
+                <div style={{
+                    position: "fixed",
+                    top: "1.5rem",
+                    right: "1.5rem",
+                    zIndex: 2000,
+                }}>
+                    <button
+                        onClick={requestMotionPermission}
+                        style={{
+                            background: "rgba(198, 166, 100, 0.2)",
+                            backdropFilter: "blur(10px)",
+                            border: "1px solid var(--accent-gold)",
+                            color: "var(--accent-gold)",
+                            padding: "0.5rem 0.8rem",
+                            borderRadius: "1rem",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem"
+                        }}
+                    >
+                        <span>🪄</span> センサーを有効にする
+                    </button>
+                </div>
+            )}
+
             <DetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
         </>
     );
 }
 
-function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; onClick: () => void; isMine: boolean }) {
+function Bubble({ post, index, onClick, isMine, isShaking }: { post: Post; index: number; onClick: () => void; isMine: boolean; isShaking: boolean }) {
     // ランダムな位置
     const [initialPos, setInitialPos] = useState<{ left: string; top: string } | null>(null);
     const [floatAnim, setFloatAnim] = useState<any>(null);
@@ -159,7 +247,12 @@ function Bubble({ post, index, onClick, isMine }: { post: Post; index: number; o
                 gap: "0.8rem",
                 cursor: "pointer",
             }}
-            animate={floatAnim}
+            animate={isShaking ? {
+                x: [0, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, 0],
+                y: [0, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, 0],
+                rotate: [0, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, 0],
+                transition: { duration: 0.5, ease: "easeInOut" }
+            } : floatAnim}
             drag
             dragMomentum={false}
             whileHover={{ scale: 1.05, cursor: "grab", zIndex: 200 }}
