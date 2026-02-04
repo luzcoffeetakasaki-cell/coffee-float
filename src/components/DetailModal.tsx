@@ -24,6 +24,9 @@ const STAMPS: Record<string, { color: string; icon: string }> = {
     JUICY: { color: "#FFB347", icon: "🍊" },
     BITTER: { color: "#A67C52", icon: "☕" },
     FLORAL: { color: "#B39DDB", icon: "🌸" },
+    RELAX: { color: "#8FBC8F", icon: "🌿" },
+    WORK: { color: "#5F9EA0", icon: "💻" },
+    REFRESH: { color: "#00CED1", icon: "✨" },
 };
 
 interface DetailModalProps {

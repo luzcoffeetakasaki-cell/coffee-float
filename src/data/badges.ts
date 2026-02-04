@@ -449,7 +449,7 @@ export const BADGES: Badge[] = [
         name: "リラックスの達人",
         icon: "🌿",
         hint: "「リラックス」スタンプを5回使う",
-        condition: ({ posts }) => countByCondition(posts, p => hasKeyword(p.flavorStamp || "", ["リラックス"])) >= 5,
+        condition: ({ posts }) => countByCondition(posts, p => hasKeyword(p.flavorStamp || "", ["RELAX", "リラックス"])) >= 5,
         description: "コーヒーで力を抜く方法を完全にマスターした。",
     },
     {
@@ -457,7 +457,7 @@ export const BADGES: Badge[] = [
         name: "集中モード",
         icon: "💻",
         hint: "「集中」スタンプを5回使う",
-        condition: ({ posts }) => countByCondition(posts, p => hasKeyword(p.flavorStamp || "", ["集中"])) >= 5,
+        condition: ({ posts }) => countByCondition(posts, p => hasKeyword(p.flavorStamp || "", ["WORK", "集中"])) >= 5,
         description: "コーヒーは仕事のガソリン。バリバリ働くあなたへ。",
     },
     {
@@ -465,7 +465,7 @@ export const BADGES: Badge[] = [
         name: "気分転換",
         icon: "✨",
         hint: "「リフレッシュ」スタンプを5回使う",
-        condition: ({ posts }) => countByCondition(posts, p => hasKeyword(p.flavorStamp || "", ["リフレッシュ", "スッキリ"])) >= 5,
+        condition: ({ posts }) => countByCondition(posts, p => hasKeyword(p.flavorStamp || "", ["REFRESH", "リフレッシュ", "スッキリ"])) >= 5,
         description: "切り替え上手は人生上手。",
     },
 
