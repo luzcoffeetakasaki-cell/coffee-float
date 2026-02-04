@@ -73,11 +73,11 @@ export default function FloatingArea() {
         }
 
         try {
-            // 最新15件を取得
+            // 最新10件を取得
             const q = query(
                 collection(db, "posts"),
                 orderBy("createdAt", "desc"),
-                limit(15)
+                limit(10)
             );
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -182,7 +182,7 @@ export default function FloatingArea() {
                                 const offsetY = 15 + Math.random() * 70;
 
                                 const left = ((gridX + offsetX / 100) / columns) * 100;
-                                const top = ((gridY + offsetY / 100) / 7) * 100; // 最大17個なので6-7行分
+                                const top = ((gridY + offsetY / 100) / 5) * 100; // 最大12個なので4-5行分
 
                                 return (
                                     <Bubble
