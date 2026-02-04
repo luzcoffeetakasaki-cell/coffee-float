@@ -205,7 +205,8 @@ export default function FloatingArea() {
                             exit={{ opacity: 0, y: -20 }}
                             style={{ padding: "0 1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}
                         >
-                            {[...posts, ...triviaItems].sort((a, b) => {
+                            {/* タイムラインにはユーザーの投稿のみ表示（雑学を除外） */}
+                            {posts.sort((a, b) => {
                                 const timeA = a.createdAt?.toMillis?.() || 0;
                                 const timeB = b.createdAt?.toMillis?.() || 0;
                                 return timeB - timeA;
@@ -326,6 +327,7 @@ function Bubble({ post, index, initialLeft, initialTop, onClick, isMine }: { pos
     }, []);
 
     const isTrivia = post.userId === "master";
+    // 雑学の場合は味わいタグ（スタンプ/アイコン）を表示しない
     const stamp = !isTrivia && post.flavorStamp ? STAMPS[post.flavorStamp] : null;
 
     if (!isMounted) return null;
