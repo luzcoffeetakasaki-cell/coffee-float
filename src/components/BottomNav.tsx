@@ -76,17 +76,17 @@ export default function BottomNav({ activeTab, setActiveTab, unreadCount }: Bott
                                     animate={{ scale: 1 }}
                                     style={{
                                         position: "absolute",
-                                        top: "0.4rem",
-                                        right: "0.8rem",
+                                        top: "0.2rem",
+                                        right: isActive ? "-0.4rem" : "0.5rem",
                                         background: "#ff4b2b",
                                         color: "white",
-                                        fontSize: "0.6rem",
+                                        fontSize: "0.55rem",
                                         fontWeight: "bold",
-                                        padding: "0.2rem 0.4rem",
+                                        padding: "0.15rem 0.35rem",
                                         borderRadius: "1rem",
-                                        minWidth: "1.2rem",
+                                        minWidth: "1.1rem",
                                         textAlign: "center",
-                                        border: "2px solid #1e0f0a",
+                                        border: "1.5px solid #1e0f0a",
                                         boxShadow: "0 2px 8px rgba(255, 75, 43, 0.4)",
                                     }}
                                 >

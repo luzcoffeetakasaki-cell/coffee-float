@@ -67,16 +67,28 @@ const FLAVOR_KEYWORDS: Record<string, { category: string; keywords: string[]; ic
 
 const KW_DUMMY = ""; // Removed MOOD_REC_MAP
 
-export default function CoffeeLog() {
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [localNotifications, setLocalNotifications] = useState<Notification[]>([]); // For client-side events like badges
+export default function CoffeeLog({
+    posts: externalPosts,
+    beans: externalBeans,
+    notifications: externalNotifications,
+    localNotifications: externalLocalNotifications,
+    setLocalNotifications,
+}: {
+    posts: Post[];
+    beans: Bean[];
+    notifications: Notification[];
+    localNotifications: Notification[];
+    setLocalNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+}) {
+    const [posts, setPosts] = useState<Post[]>(externalPosts);
+    const [notifications, setNotifications] = useState<Notification[]>(externalNotifications);
+    const [localNotifications, setLocalNotificationsState] = useState<Notification[]>(externalLocalNotifications);
     const [userId, setUserId] = useState<string | null>(null);
     const [stats, setStats] = useState<Record<string, number>>({});
     const [keywordStats, setKeywordStats] = useState<Record<string, number>>({});
-    const [beans, setBeans] = useState<Bean[]>([]);
+    const [beans, setBeans] = useState<Bean[]>(externalBeans);
     const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [nickname, setNickname] = useState("");
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [selectedBadge, setSelectedBadge] = useState<{ badge: Badge; isEarned: boolean } | null>(null);
@@ -106,8 +118,6 @@ export default function CoffeeLog() {
                 // ログイン済みだが、ローカルにゲストIDが残っている場合 = 移行が必要
                 migrateGuestData(storedGuestId, id);
             }
-
-            setLoading(false);
         };
         init();
     }, []);
@@ -136,139 +146,40 @@ export default function CoffeeLog() {
         }
     };
 
+    // Sync with external props
     useEffect(() => {
-        if (!userId) return;
+        setPosts(externalPosts);
+        setBeans(externalBeans);
+        setNotifications(externalNotifications);
+        setLocalNotificationsState(externalLocalNotifications);
 
-        const q = query(
-            collection(db, "posts"),
-            where("userId", "==", userId),
-            orderBy("createdAt", "desc")
-        );
+        // Recalculate stats when posts change
+        const newStats: Record<string, number> = {};
+        const newKeywordStats: Record<string, number> = {};
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const newPosts = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Post[];
-            setPosts(newPosts);
-
-            // 統計とキーワードの計算
-            const newStats: Record<string, number> = {};
-            const newKeywordStats: Record<string, number> = {};
-
-            newPosts.forEach(p => {
-                const weight = p.isFavorite ? 3 : 1;
-
-                // スタンプの統計
-                if (p.flavorStamp) {
-                    newStats[p.flavorStamp] = (newStats[p.flavorStamp] || 0) + weight;
-                }
-
-                // キーワードの抽出
-                Object.entries(FLAVOR_KEYWORDS).forEach(([key, info]) => {
-                    info.keywords.forEach(word => {
-                        if (p.flavorText.includes(word)) {
-                            newKeywordStats[key] = (newKeywordStats[key] || 0) + weight;
-                        }
-                    });
+        externalPosts.forEach(p => {
+            const weight = p.isFavorite ? 3 : 1;
+            if (p.flavorStamp) {
+                newStats[p.flavorStamp] = (newStats[p.flavorStamp] || 0) + weight;
+            }
+            Object.entries(FLAVOR_KEYWORDS).forEach(([key, info]) => {
+                info.keywords.forEach(word => {
+                    if (p.flavorText.includes(word)) {
+                        newKeywordStats[key] = (newKeywordStats[key] || 0) + weight;
+                    }
                 });
             });
-
-            setStats(newStats);
-            setKeywordStats(newKeywordStats);
-            setLoading(false);
         });
 
-        return () => unsubscribe();
-    }, [userId]);
+        setStats(newStats);
+        setKeywordStats(newKeywordStats);
 
-    // 通知の取得
-    useEffect(() => {
-        if (!userId) return;
-
-        const q = query(
-            collection(db, "notifications"),
-            where("toUserId", "==", userId),
-            orderBy("createdAt", "desc"),
-            limit(50)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const newNotifications = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Notification[];
-
-            // クライアントサイドでソート（インデックス不足対策）
-            newNotifications.sort((a, b) => {
-                const timeA = a.createdAt?.toMillis?.() || 0;
-                const timeB = b.createdAt?.toMillis?.() || 0;
-                return timeB - timeA;
-            });
-
-            setNotifications(newNotifications);
-        }, (error) => {
-            console.error("Notification listener failed:", error);
-            setNotifications([]);
-        });
-
-        return () => unsubscribe();
-    }, [userId]);
-
-    // 豆リストの取得（バッジ計算用）
-    useEffect(() => {
-        if (!userId) return;
-
-        const q = query(
-            collection(db, "beans"),
-            where("userId", "==", userId)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const newBeans = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Bean[];
-            setBeans(newBeans);
-        });
-
-        return () => unsubscribe();
-    }, [userId]);
-
-    // バッジの計算
-    // バッジの計算と通知
-    useEffect(() => {
+        // Recalculate earned badges
         const earned = BADGES
-            .filter(badge => badge.condition({ posts, beans }))
+            .filter(badge => badge.condition({ posts: externalPosts, beans: externalBeans }))
             .map(badge => badge.id);
-
         setEarnedBadges(earned);
-
-        // 新規獲得バッジのチェック
-        const seenBadgesJson = localStorage.getItem("coffee_float_seen_badges");
-        const seenBadges = seenBadgesJson ? JSON.parse(seenBadgesJson) : [];
-        const newBadges = earned.filter(id => !seenBadges.includes(id));
-
-        if (newBadges.length > 0) {
-            const newLocalNotifs: Notification[] = newBadges.map(id => {
-                const badge = BADGES.find(b => b.id === id);
-                return {
-                    id: `badge_${id}_${Date.now()}`,
-                    type: 'badge',
-                    badgeName: badge?.name || "Unknown Badge",
-                    badgeIcon: badge?.icon || "🏅",
-                    read: false,
-                    createdAt: Timestamp.now()
-                };
-            });
-
-            setLocalNotifications(prev => [...newLocalNotifs, ...prev]);
-
-            // 保存
-            const updatedSeen = Array.from(new Set([...seenBadges, ...newBadges]));
-            localStorage.setItem("coffee_float_seen_badges", JSON.stringify(updatedSeen));
-        }
-    }, [posts, beans]);
+    }, [externalPosts, externalBeans, externalNotifications, externalLocalNotifications]);
 
     // Firestoreからの通知とローカル通知をマージしてソート
     const allNotifications = [...localNotifications, ...notifications].sort((a, b) => {

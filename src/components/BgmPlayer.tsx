@@ -17,37 +17,42 @@ export default function BgmPlayer() {
     const fireRef = useRef<HTMLAudioElement>(null);
     const cafeRef = useRef<HTMLAudioElement>(null);
 
-    // Dynamic BGM URL
     const currentBgm = BGM_LIST.find(b => b.id === selectedBgmId) || BGM_LIST[0];
     const BGM_URL = currentBgm.url;
     const RAIN_URL = "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/rain.mp3";
     const FIRE_URL = "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/fireplace.mp3";
     const CAFE_URL = "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/cafe.mp3";
 
-    // Helper to control audio elements
-    const controlAudio = (ref: React.RefObject<HTMLAudioElement | null>, isPlaying: boolean, volume: number) => {
-        if (!ref.current) return;
-        ref.current.volume = volume;
-        if (isPlaying) {
-            ref.current.play().catch(e => console.error("Play failed", e));
-        } else {
-            ref.current.pause();
-        }
-    };
+    // Handle Volumes independently
+    useEffect(() => { if (bgmRef.current) bgmRef.current.volume = bgmVolume; }, [bgmVolume]);
+    useEffect(() => { if (rainRef.current) rainRef.current.volume = rainVolume; }, [rainVolume]);
+    useEffect(() => { if (fireRef.current) fireRef.current.volume = fireVolume; }, [fireVolume]);
+    useEffect(() => { if (cafeRef.current) cafeRef.current.volume = cafeVolume; }, [cafeVolume]);
+
+    // Handle Playback
+    useEffect(() => {
+        if (!bgmRef.current) return;
+        if (isPlayingBgm) bgmRef.current.play().catch(console.error);
+        else bgmRef.current.pause();
+    }, [isPlayingBgm, BGM_URL]);
 
     useEffect(() => {
-        if (bgmRef.current) {
-            bgmRef.current.src = BGM_URL;
-            if (isPlayingBgm) {
-                bgmRef.current.play().catch(e => console.error("BGM play failed", e));
-            }
-        }
-    }, [BGM_URL]);
+        if (!rainRef.current) return;
+        if (isPlayingRain) rainRef.current.play().catch(console.error);
+        else rainRef.current.pause();
+    }, [isPlayingRain]);
 
-    useEffect(() => { controlAudio(bgmRef, isPlayingBgm, bgmVolume); }, [isPlayingBgm, bgmVolume]);
-    useEffect(() => { controlAudio(rainRef, isPlayingRain, rainVolume); }, [isPlayingRain, rainVolume]);
-    useEffect(() => { controlAudio(fireRef, isPlayingFire, fireVolume); }, [isPlayingFire, fireVolume]);
-    useEffect(() => { controlAudio(cafeRef, isPlayingCafe, cafeVolume); }, [isPlayingCafe, cafeVolume]);
+    useEffect(() => {
+        if (!fireRef.current) return;
+        if (isPlayingFire) fireRef.current.play().catch(console.error);
+        else fireRef.current.pause();
+    }, [isPlayingFire]);
+
+    useEffect(() => {
+        if (!cafeRef.current) return;
+        if (isPlayingCafe) cafeRef.current.play().catch(console.error);
+        else cafeRef.current.pause();
+    }, [isPlayingCafe]);
 
     return (
         <div style={{ display: "none" }}>
