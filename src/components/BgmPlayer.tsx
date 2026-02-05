@@ -14,9 +14,9 @@ export default function BgmPlayer() {
     // Audio Sources (Free/Royalty Free)
     // Using placeholder URLs for SE - in production these should be local files or stable CDNs
     const BGM_URL = "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3";
-    const RAIN_URL = "https://cdn.pixabay.com/download/audio/2022/01/18/audio_823a2335f6.mp3"; // Rain effect
-    const FIRE_URL = "https://cdn.pixabay.com/download/audio/2021/08/09/audio_a46234b4c7.mp3"; // Fireplace
-    const CAFE_URL = "https://cdn.pixabay.com/download/audio/2021/08/09/audio_88447e769f.mp3"; // Cafe Ambience
+    const RAIN_URL = "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/rain.mp3";
+    const FIRE_URL = "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/fireplace.mp3";
+    const CAFE_URL = "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/cafe.mp3";
 
     // Helper to control audio elements
     const controlAudio = (ref: React.RefObject<HTMLAudioElement | null>, isPlaying: boolean, volume: number) => {
