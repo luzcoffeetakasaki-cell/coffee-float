@@ -19,6 +19,7 @@ import { RelaxProvider } from "@/context/RelaxContext";
 export const metadata: Metadata = {
   title: "Coffee Float - 湯気のように漂うコーヒーの思い出",
   description: "今、この瞬間の美味しいを共有する。コーヒーの感動共有アプリ。",
+  referrer: "no-referrer",
 };
 
 export const viewport = {

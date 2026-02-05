@@ -23,7 +23,16 @@ interface RelaxContextType {
     toggleCafe: () => void;
     cafeVolume: number;
     setCafeVolume: (volume: number) => void;
+
+    // BGM Selection
+    selectedBgmId: string;
+    setSelectedBgmId: (id: string) => void;
 }
+
+export const BGM_LIST = [
+    { id: "classic", label: "Midnight Lo-Fi", url: "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" },
+    { id: "forest", label: "Forest Chill", url: "https://raw.githubusercontent.com/bradtraversy/ambient-sound-mixer/main/audio/birds.mp3" },
+];
 
 const RelaxContext = createContext<RelaxContextType | undefined>(undefined);
 
@@ -41,6 +50,8 @@ export function RelaxProvider({ children }: { children: ReactNode }) {
 
     const [isPlayingCafe, setIsPlayingCafe] = useState(false);
     const [cafeVolume, setCafeVolume] = useState(0.3);
+
+    const [selectedBgmId, setSelectedBgmId] = useState("classic");
 
     return (
         <RelaxContext.Provider value={{
@@ -63,6 +74,9 @@ export function RelaxProvider({ children }: { children: ReactNode }) {
             toggleCafe: () => setIsPlayingCafe(prev => !prev),
             cafeVolume,
             setCafeVolume,
+
+            selectedBgmId,
+            setSelectedBgmId,
         }}>
             {children}
         </RelaxContext.Provider>

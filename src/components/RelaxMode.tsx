@@ -1,6 +1,6 @@
 "use client";
 
-import { useRelax } from "@/context/RelaxContext";
+import { useRelax, BGM_LIST } from "@/context/RelaxContext";
 import { motion } from "framer-motion";
 
 export default function RelaxMode() {
@@ -8,7 +8,8 @@ export default function RelaxMode() {
         isPlayingBgm, toggleBgm, bgmVolume, setBgmVolume,
         isPlayingRain, toggleRain, rainVolume, setRainVolume,
         isPlayingFire, toggleFire, fireVolume, setFireVolume,
-        isPlayingCafe, toggleCafe, cafeVolume, setCafeVolume
+        isPlayingCafe, toggleCafe, cafeVolume, setCafeVolume,
+        selectedBgmId, setSelectedBgmId
     } = useRelax();
 
     const mixerItems = [
@@ -58,6 +59,46 @@ export default function RelaxMode() {
                         }
                     `}</style>
                 </motion.div>
+            </div>
+
+            {/* BGM Selector */}
+            <div style={{ marginBottom: "2rem" }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--accent-gold)", marginBottom: "0.8rem", paddingLeft: "0.5rem", fontWeight: "bold" }}>SELECT BGM</p>
+                <div style={{
+                    display: "flex",
+                    gap: "0.8rem",
+                    overflowX: "auto",
+                    padding: "0.5rem",
+                    paddingBottom: "1rem",
+                    scrollbarWidth: "none", // Hide scrollbar for cleaner look
+                }}>
+                    <style jsx>{`
+                        div::-webkit-scrollbar { display: none; }
+                    `}</style>
+                    {BGM_LIST.map((bgm) => (
+                        <motion.button
+                            key={bgm.id}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setSelectedBgmId(bgm.id)}
+                            style={{
+                                flexShrink: 0,
+                                background: selectedBgmId === bgm.id ? "var(--accent-gold)" : "rgba(255,255,255,0.05)",
+                                color: selectedBgmId === bgm.id ? "#1e0f0a" : "var(--text-main)",
+                                border: selectedBgmId === bgm.id ? "1px solid var(--accent-gold)" : "1px solid rgba(255,255,255,0.1)",
+                                borderRadius: "1rem",
+                                padding: "0.6rem 1.2rem",
+                                fontSize: "0.85rem",
+                                whiteSpace: "nowrap",
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                                fontWeight: selectedBgmId === bgm.id ? "bold" : "normal",
+                                boxShadow: selectedBgmId === bgm.id ? "0 0 15px rgba(198, 166, 100, 0.3)" : "none"
+                            }}
+                        >
+                            {bgm.label}
+                        </motion.button>
+                    ))}
+                </div>
             </div>
 
             <div style={{ display: "grid", gap: "1rem" }}>
